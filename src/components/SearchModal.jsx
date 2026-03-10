@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X } from "lucide-react";
+import { Search, X, TrendingUp, Clock } from "lucide-react";
 import { products } from "@/data/products";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,6 +10,10 @@ import { motion, AnimatePresence } from "framer-motion";
 
 
 
+const popularSearches = ["Planners", "Notebooks", "Journals", "Sticky Notes", "Gift Sets", "Study Planner"];
+
+const trendingProducts = products.filter((p) => p.badge === "Trending" || p.badge === "Popular").slice(0, 4);
+
 const SearchModal = ({ open, onOpenChange }) => {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
@@ -18,7 +22,6 @@ const SearchModal = ({ open, onOpenChange }) => {
     if (!open) setQuery("");
   }, [open]);
 
-  // Keyboard shortcut
   useEffect(() => {
     const handler = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -48,6 +51,10 @@ const SearchModal = ({ open, onOpenChange }) => {
     navigate(`/product/${slug}`);
   };
 
+  const handlePopularSearch = (term) => {
+    setQuery(term);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
@@ -67,11 +74,54 @@ const SearchModal = ({ open, onOpenChange }) => {
           }
         </div>
 
-        <div className="max-h-80 overflow-y-auto">
+        <div className="max-h-96 overflow-y-auto">
           {query.trim() === "" ?
-          <div className="p-6 text-center text-sm text-muted-foreground">
-              <p>Start typing to search products...</p>
-              <p className="text-xs mt-1 opacity-60">Tip: Press <kbd className="px-1.5 py-0.5 bg-secondary rounded text-[10px] font-mono">⌘K</kbd> to open search</p>
+          <div className="p-4 space-y-5">
+              {/* Popular Searches */}
+              <div>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  <Clock size={12} /> Popular Searches
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {popularSearches.map((term) =>
+                <button
+                  key={term}
+                  onClick={() => handlePopularSearch(term)}
+                  className="text-xs px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground transition-colors">
+                  
+                      {term}
+                    </button>
+                )}
+                </div>
+              </div>
+
+              {/* Trending Products */}
+              <div>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  <TrendingUp size={12} /> Trending Products
+                </div>
+                {trendingProducts.map((product) =>
+              <button
+                key={product.id}
+                onClick={() => handleSelect(product.slug)}
+                className="w-full flex items-center gap-3 px-2 py-2.5 hover:bg-secondary rounded-xl transition-colors text-left">
+                
+                    <img
+                  src={product.images[0]}
+                  alt={product.name}
+                  className="w-10 h-10 rounded-lg object-cover bg-secondary shrink-0" />
+                
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{product.name}</p>
+                      <p className="text-xs text-muted-foreground">₹{product.price}</p>
+                    </div>
+                  </button>
+              )}
+              </div>
+
+              <p className="text-[10px] text-center text-muted-foreground/60">
+                Press <kbd className="px-1.5 py-0.5 bg-secondary rounded text-[10px] font-mono">⌘K</kbd> to open search
+              </p>
             </div> :
           results.length === 0 ?
           <div className="p-6 text-center text-sm text-muted-foreground">
@@ -100,6 +150,11 @@ const SearchModal = ({ open, onOpenChange }) => {
                       <p className="text-sm font-medium text-foreground truncate">{product.name}</p>
                       <p className="text-xs text-muted-foreground">{product.category} · ₹{product.price}</p>
                     </div>
+                    {product.badge &&
+                <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0">
+                        {product.badge}
+                      </span>
+                }
                   </button>
               )}
               </motion.div>

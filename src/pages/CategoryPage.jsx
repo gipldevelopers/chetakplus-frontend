@@ -15,7 +15,7 @@ const CategoryPage = () => {
     switch (sortBy) {
       case "price-asc":result.sort((a, b) => a.price - b.price);break;
       case "price-desc":result.sort((a, b) => b.price - a.price);break;
-      case "rating":result.sort((a, b) => b.rating - a.rating);break;
+
       default:break;
     }
     return result;
@@ -57,7 +57,7 @@ const CategoryPage = () => {
             <option value="featured">Featured</option>
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
-            <option value="rating">Best Rating</option>
+
           </select>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">

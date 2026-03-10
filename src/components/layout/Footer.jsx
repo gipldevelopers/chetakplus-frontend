@@ -4,10 +4,30 @@ import { Mail, Phone, MapPin, Instagram, Facebook, Twitter } from "lucide-react"
 const Footer = () => {
   return (
     <footer className="bg-foreground text-background">
-      <div className="container-custom py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          {/* Brand */}
+      {/* Newsletter CTA */}
+      <div className="border-b border-background/10">
+        <div className="container-custom py-10 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
+            <h3 className="font-display text-xl font-bold">Get 10% Off Your First Order</h3>
+            <p className="text-background/60 text-sm mt-1">Subscribe for productivity tips & exclusive offers.</p>
+          </div>
+          <form className="flex gap-2 w-full sm:w-auto">
+            <input
+              type="email"
+              placeholder="Your email address"
+              className="px-4 py-2.5 rounded-xl text-sm bg-background/10 text-background placeholder:text-background/40 focus:outline-none focus:ring-1 focus:ring-primary w-full sm:w-64" />
+            
+            <button type="submit" className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity whitespace-nowrap">
+              Subscribe
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div className="container-custom py-16">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10">
+          {/* Brand */}
+          <div className="col-span-2 md:col-span-1">
             <h3 className="font-display text-2xl font-bold mb-4">
               Chetak<span className="text-primary">Plus</span>
             </h3>
@@ -27,17 +47,42 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Shop Categories */}
           <div>
-            <h4 className="font-semibold text-sm uppercase tracking-wider mb-4">Quick Links</h4>
+            <h4 className="font-semibold text-sm uppercase tracking-wider mb-4">Shop</h4>
             <ul className="space-y-3">
-              {["Shop", "Planners", "Notebooks", "Journals", "About Us"].map((link) =>
-              <li key={link}>
-                  <Link
-                  to={`/${link.toLowerCase().replace(" ", "-").replace("us", "")}`}
-                  className="text-sm text-background/60 hover:text-primary transition-colors">
-                  
-                    {link}
+              {[
+              { name: "Planners", href: "/category/planners" },
+              { name: "Notebooks", href: "/category/notebooks" },
+              { name: "Journals", href: "/category/journals" },
+              { name: "Office Stationery", href: "/category/office-stationery" },
+              { name: "Bundles", href: "/category/bundles" },
+              { name: "New Arrivals", href: "/shop?filter=new" },
+              { name: "Best Sellers", href: "/shop?filter=bestseller" }].
+              map((link) =>
+              <li key={link.name}>
+                  <Link to={link.href} className="text-sm text-background/60 hover:text-primary transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div>
+            <h4 className="font-semibold text-sm uppercase tracking-wider mb-4">Company</h4>
+            <ul className="space-y-3">
+              {[
+              { name: "About Us", href: "/about" },
+              { name: "Contact", href: "/contact" },
+              { name: "Blog", href: "/blog" },
+              { name: "Corporate Orders", href: "/corporate" },
+              { name: "FAQ", href: "/faq" }].
+              map((link) =>
+              <li key={link.name}>
+                  <Link to={link.href} className="text-sm text-background/60 hover:text-primary transition-colors">
+                    {link.name}
                   </Link>
                 </li>
               )}
@@ -52,8 +97,7 @@ const Footer = () => {
               { name: "Privacy Policy", href: "/privacy-policy" },
               { name: "Shipping Policy", href: "/shipping-policy" },
               { name: "Refund Policy", href: "/refund-policy" },
-              { name: "Terms & Conditions", href: "/terms" },
-              { name: "FAQ", href: "/faq" }].
+              { name: "Terms & Conditions", href: "/terms" }].
               map((link) =>
               <li key={link.name}>
                   <Link to={link.href} className="text-sm text-background/60 hover:text-primary transition-colors">
@@ -84,10 +128,15 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-background/10 mt-12 pt-8 text-center">
+        <div className="border-t border-background/10 mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-background/40">
             © {new Date().getFullYear()} ChetakPlus. All rights reserved. Premium Stationery Since 1984.
           </p>
+          <div className="flex gap-6 text-xs text-background/40">
+            <Link to="/privacy-policy" className="hover:text-primary transition-colors">Privacy</Link>
+            <Link to="/terms" className="hover:text-primary transition-colors">Terms</Link>
+            <Link to="/shipping-policy" className="hover:text-primary transition-colors">Shipping</Link>
+          </div>
         </div>
       </div>
     </footer>);

@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, X } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ScrollReveal from "@/components/ui/ScrollReveal";
@@ -8,15 +9,23 @@ const sortOptions = [
 { label: "Featured", value: "featured" },
 { label: "Price: Low to High", value: "price-asc" },
 { label: "Price: High to Low", value: "price-desc" },
-{ label: "Newest", value: "newest" },
-{ label: "Best Rating", value: "rating" }];
+{ label: "Newest", value: "newest" }];
 
 
 const Shop = () => {
+  const [searchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("featured");
   const [showFilters, setShowFilters] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 1000]);
+
+  // Read maxPrice from URL params (for "Shop by Budget" links)
+  useEffect(() => {
+    const maxPrice = searchParams.get("maxPrice");
+    if (maxPrice) {
+      setPriceRange([0, parseInt(maxPrice)]);
+    }
+  }, [searchParams]);
 
   const filtered = useMemo(() => {
     let result = [...products];
@@ -27,7 +36,7 @@ const Shop = () => {
     switch (sortBy) {
       case "price-asc":result.sort((a, b) => a.price - b.price);break;
       case "price-desc":result.sort((a, b) => b.price - a.price);break;
-      case "rating":result.sort((a, b) => b.rating - a.rating);break;
+
       default:break;
     }
     return result;

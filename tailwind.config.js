@@ -97,6 +97,11 @@ export default {
           "0%": { transform: "translateX(100%)" },
           "100%": { transform: "translateX(0)" },
         },
+        "pan-video": {
+          "0%": { transform: "scale(1.0) translate(0, 0)" },
+          "50%": { transform: "scale(1.05) translate(-1%, 1%)" },
+          "100%": { transform: "scale(1.0) translate(0, 0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -105,6 +110,7 @@ export default {
         "fade-in": "fade-in 0.5s ease-out",
         "scale-in": "scale-in 0.3s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
+        "pan-video": "pan-video 20s ease-in-out infinite",
       },
     },
   },

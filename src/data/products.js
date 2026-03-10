@@ -40,6 +40,11 @@ import deskOrganizer1 from "@/assets/products/desk-organizer-1.jpg";
 
 
 
+
+
+
+
+
 export const products = [
 {
   id: "1",
@@ -74,7 +79,8 @@ export const products = [
   { label: "Colour", options: ["Red Marble", "Blue Marble", "Green Marble", "Black Marble"] }],
 
   badge: "Best Seller",
-  inStock: true
+  inStock: true,
+  perfectFor: ["Office", "Students", "Professionals"]
 },
 {
   id: "2",
@@ -109,7 +115,10 @@ export const products = [
   { label: "Pages", options: ["96 Pages", "192 Pages", "288 Pages", "384 Pages"] }],
 
   badge: "New Arrival",
-  inStock: true
+  inStock: true,
+  perfectFor: ["Students", "Professionals", "Journaling", "Note-taking"],
+  writingExperience: { gsm: "70 GSM", paper: "Meplitho Paper", feel: "Smooth, bleed-resistant" },
+  whatsInside: ["Hard-bound cover", "Meplitho paper pages", "Ruled layout"]
 },
 {
   id: "3",
@@ -144,7 +153,9 @@ export const products = [
   variants: [
   { label: "Pages", options: ["140 Pages", "172 Pages", "224 Pages", "288 Pages", "392 Pages"] }],
 
-  inStock: true
+  inStock: true,
+  perfectFor: ["Students", "Academic use", "Daily writing"],
+  writingExperience: { gsm: "58 GSM", paper: "Meplitho Paper", feel: "Smooth writing surface" }
 },
 {
   id: "4",
@@ -181,7 +192,9 @@ export const products = [
   { label: "Type", options: ["Ruled", "Unruled"] }],
 
   badge: "Trending",
-  inStock: true
+  inStock: true,
+  perfectFor: ["Daily Journaling", "Sketching", "Creative writing"],
+  writingExperience: { gsm: "80 GSM", paper: "Natural Shade", feel: "Premium smooth finish" }
 },
 {
   id: "5",
@@ -212,7 +225,10 @@ export const products = [
     "Duration": "52 Weeks"
   },
   badge: "Popular",
-  inStock: true
+  inStock: true,
+  perfectFor: ["Professionals", "Students", "Daily Planning", "Goal Tracking"],
+  writingExperience: { gsm: "80 GSM", paper: "Premium White", feel: "Bleed-resistant smooth pages" },
+  whatsInside: ["Weekly overview spreads", "Goal-setting pages", "Habit tracker", "Notes section", "Motivational quotes"]
 },
 {
   id: "6",
@@ -242,7 +258,9 @@ export const products = [
     "Pages": "192",
     "Binding": "Hard Bound"
   },
-  inStock: true
+  inStock: true,
+  perfectFor: ["Students", "Exam preparation", "Academic planning"],
+  whatsInside: ["Subject-wise sections", "Revision tracker", "Exam countdown", "Daily study log", "Goal pages"]
 },
 {
   id: "7",
@@ -272,7 +290,8 @@ export const products = [
     "Paper": "70 GSM Meplitho"
   },
   badge: "Premium",
-  inStock: true
+  inStock: true,
+  perfectFor: ["Corporate gifting", "Events", "Employee appreciation"]
 },
 {
   id: "8",
@@ -302,9 +321,11 @@ export const products = [
     "Duration": "180 Days",
     "Binding": "Wiro"
   },
-  inStock: true
+  inStock: true,
+  perfectFor: ["Professionals", "Daily Planning", "Goal Tracking"],
+  writingExperience: { gsm: "80 GSM", paper: "Natural Shade", feel: "Smooth, premium finish" },
+  whatsInside: ["Hourly schedule blocks", "Habit tracker", "Priority list", "Gratitude section", "Notes area"]
 },
-// New products
 {
   id: "9",
   name: "Spiral Notebook – Geometric Edition",
@@ -334,7 +355,8 @@ export const products = [
     "Binding": "Spiral / Wiro"
   },
   badge: "New Arrival",
-  inStock: true
+  inStock: true,
+  perfectFor: ["Students", "Office use", "Everyday notes"]
 },
 {
   id: "10",
@@ -363,7 +385,8 @@ export const products = [
     "Sheets": "400+",
     "Colours": "6 assorted"
   },
-  inStock: true
+  inStock: true,
+  perfectFor: ["Planning", "Office", "Students"]
 },
 {
   id: "11",
@@ -394,7 +417,9 @@ export const products = [
     "Cover": "Faux Leather"
   },
   badge: "Premium",
-  inStock: true
+  inStock: true,
+  perfectFor: ["Journaling", "Creative writing", "Gifting"],
+  writingExperience: { gsm: "80 GSM", paper: "Cream-shade premium", feel: "Luxurious smooth writing" }
 },
 {
   id: "12",
@@ -424,7 +449,8 @@ export const products = [
     "Sheets": "500 per ream",
     "Brightness": "95%"
   },
-  inStock: true
+  inStock: true,
+  perfectFor: ["Office printing", "Schools", "Institutions"]
 },
 {
   id: "13",
@@ -455,7 +481,9 @@ export const products = [
     "Binding": "Wiro"
   },
   badge: "New Arrival",
-  inStock: true
+  inStock: true,
+  perfectFor: ["Professionals", "Monthly planning", "Goal tracking"],
+  whatsInside: ["Monthly overview spreads", "Goal-setting pages", "Habit tracker", "Notes section"]
 },
 {
   id: "14",
@@ -486,7 +514,10 @@ export const products = [
     "Binding": "Thread-sewn hardcover"
   },
   badge: "Trending",
-  inStock: true
+  inStock: true,
+  perfectFor: ["Mindfulness", "Self-care", "Daily reflection"],
+  writingExperience: { gsm: "90 GSM", paper: "Premium White", feel: "Thick, bleed-proof pages" },
+  whatsInside: ["Daily gratitude prompts", "Weekly reflection pages", "Inspiring quotes", "Monthly check-in"]
 },
 {
   id: "15",
@@ -515,7 +546,111 @@ export const products = [
     "Compartments": "5",
     "Dimensions": "15 × 10 × 12 cm"
   },
-  inStock: true
+  inStock: true,
+  perfectFor: ["Office", "Home desk", "Students"]
+},
+// Bundles
+{
+  id: "16",
+  name: "Productivity Starter Kit",
+  brand: "ChetakPlus",
+  slug: "productivity-starter-kit",
+  category: "Bundles",
+  categorySlug: "bundles",
+  price: 499,
+  originalPrice: 699,
+  rating: 4.8,
+  reviewCount: 34,
+  images: [wiroDiary3, stickyNotes1, noteDiary1],
+  shortDescription: "Everything you need to kickstart your productivity journey — planner, notebook, and sticky notes.",
+  description: "The ultimate starter kit for productivity enthusiasts. This carefully curated bundle includes a Weekly Planner, a Spiral Notebook, and a Colourful Sticky Notes Pack — everything you need to plan, write, and organize your life.",
+  features: [
+  "Weekly Planner included",
+  "Spiral Notebook included",
+  "Sticky Notes Pack included",
+  "Save ₹200 vs buying separately",
+  "Gift-ready packaging",
+  "Perfect starter bundle"],
+
+  specifications: {
+    "Includes": "Planner + Notebook + Sticky Notes",
+    "Total Value": "₹699",
+    "Bundle Price": "₹499",
+    "Savings": "₹200 (29% off)"
+  },
+  badge: "Bundle",
+  inStock: true,
+  isBundle: true,
+  bundleItems: ["Weekly Planner", "Spiral Notebook", "Colourful Sticky Notes Pack"],
+  perfectFor: ["Students", "Professionals", "Gift-giving"]
+},
+{
+  id: "17",
+  name: "Student Essentials Bundle",
+  brand: "ChetakPlus",
+  slug: "student-essentials-bundle",
+  category: "Bundles",
+  categorySlug: "bundles",
+  price: 449,
+  originalPrice: 620,
+  rating: 4.7,
+  reviewCount: 28,
+  images: [noteDiary3, a4LongBook1, stickyNotes1],
+  shortDescription: "Complete student bundle with study planner, long book, and sticky notes for exam success.",
+  description: "Ace your exams with the Student Essentials Bundle. Includes a Study Planner for structured preparation, an A4 Long Book for notes, and Colourful Sticky Notes for quick revision marks.",
+  features: [
+  "Study Planner included",
+  "A4 Long Book included",
+  "Sticky Notes Pack included",
+  "Save ₹171 vs buying separately",
+  "Perfect for exam preparation",
+  "Everything a student needs"],
+
+  specifications: {
+    "Includes": "Study Planner + A4 Long Book + Sticky Notes",
+    "Total Value": "₹620",
+    "Bundle Price": "₹449",
+    "Savings": "₹171 (28% off)"
+  },
+  badge: "Bundle",
+  inStock: true,
+  isBundle: true,
+  bundleItems: ["Study Planner", "A/4 Long Book", "Colourful Sticky Notes Pack"],
+  perfectFor: ["Students", "Exam preparation"]
+},
+{
+  id: "18",
+  name: "Journal Lover's Gift Set",
+  brand: "ChetakPlus",
+  slug: "journal-lovers-gift-set",
+  category: "Bundles",
+  categorySlug: "bundles",
+  price: 549,
+  originalPrice: 750,
+  rating: 4.9,
+  reviewCount: 41,
+  images: [leatherJournal1, gratitudeJournal1, wiroDiary1],
+  shortDescription: "The perfect gift for journal enthusiasts — leather journal, gratitude journal, and wiro diary.",
+  description: "A beautifully curated set for those who love to write. This bundle includes a Classic Leather-Look Journal, a Gratitude Journal, and a Wiro Note Diary — perfect for gifting or self-indulgence.",
+  features: [
+  "Leather-Look Journal included",
+  "Gratitude Journal included",
+  "Wiro Note Diary included",
+  "Save ₹201 vs buying separately",
+  "Premium gift packaging",
+  "Ideal for journal enthusiasts"],
+
+  specifications: {
+    "Includes": "Leather Journal + Gratitude Journal + Wiro Diary",
+    "Total Value": "₹750",
+    "Bundle Price": "₹549",
+    "Savings": "₹201 (27% off)"
+  },
+  badge: "Bundle",
+  inStock: true,
+  isBundle: true,
+  bundleItems: ["Classic Leather-Look Journal", "Gratitude Journal", "80 GSM Wiro Note Diary"],
+  perfectFor: ["Gifting", "Journal lovers", "Self-care"]
 }];
 
 
@@ -523,7 +658,8 @@ export const categories = [
 { name: "Planners", slug: "planners", description: "Stay organized and productive with our range of weekly, daily, and study planners." },
 { name: "Notebooks", slug: "notebooks", description: "Premium quality notebooks for writing, journaling, and note-taking." },
 { name: "Journals", slug: "journals", description: "Express yourself with our beautifully designed journals." },
-{ name: "Office Stationery", slug: "office-stationery", description: "Professional stationery for office and institutional use." }];
+{ name: "Office Stationery", slug: "office-stationery", description: "Professional stationery for office and institutional use." },
+{ name: "Bundles", slug: "bundles", description: "Save more with our curated bundles and gift sets." }];
 
 
 export const getProductsByCategory = (slug) =>
@@ -537,3 +673,12 @@ products.filter((p) => p.badge === "Best Seller" || p.badge === "Popular" || p.r
 
 export const getTrending = () =>
 products.filter((p) => p.badge === "Trending" || p.badge === "New Arrival");
+
+export const getNewArrivals = () =>
+products.filter((p) => p.badge === "New Arrival");
+
+export const getBundles = () =>
+products.filter((p) => p.isBundle);
+
+export const getFeaturedProduct = () =>
+products.find((p) => p.slug === "weekly-planner-productivity") || products[0];
