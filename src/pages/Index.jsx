@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, BookOpen, Target, Calendar, Star, ChevronRight, Truck, Shield, Sparkles, GraduationCap, Briefcase, ListChecks, PenTool, Layers, Gem, BookHeart, Package, Notebook, FileText, StickyNote, Gift, Clock, Flame } from "lucide-react";
+import { ArrowRight, BookOpen, Target, Calendar, Star, ChevronRight, Truck, Shield, Sparkles, GraduationCap, Briefcase, ListChecks, PenTool, Layers, Gem, BookHeart, Package, Notebook, FileText, StickyNote, Gift, Clock, Flame, TimerIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import ProductCard from "@/components/ProductCard";
@@ -115,8 +115,8 @@ const Index = () => {
               <span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-primary bg-primary/10 px-4 py-1.5 rounded-full">
                 Premium Stationery · Since 1984
               </span>
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] text-foreground">
-                Write Your <br />
+              <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] text-foreground">
+                Write Your <br className="hidden sm:block" />
                 <span className="text-primary">Success Story</span>
               </h1>
               <p className="text-base lg:text-lg text-muted-foreground max-w-md leading-relaxed">
@@ -140,7 +140,7 @@ const Index = () => {
                 {[
                 { icon: Truck, label: "Free Shipping 999+" },
                 { icon: Shield, label: "Premium Quality" },
-                { icon: Sparkles, label: "Since 1984" }].
+                { icon: TimerIcon, label: "Since 1984" }].
                 map((f) =>
                 <div key={f.label} className="flex items-center gap-2 text-muted-foreground">
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -218,7 +218,7 @@ const Index = () => {
               <p className="text-muted-foreground mt-2">Everything you need for writing, planning & organising</p>
             </div>
           </ScrollReveal>
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4 lg:gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-5">
             {allCategories.map((cat, i) =>
             <ScrollReveal key={cat.label} delay={i * 0.04}>
                 <Link
@@ -378,7 +378,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-foreground/80 via-foreground/40 to-transparent" />
                 <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-12 lg:px-16">
                   <motion.h2
-                    className="font-display text-3xl sm:text-4xl lg:text-5xl font-black text-background"
+                    className="font-display text-2xl sm:text-4xl lg:text-5xl font-black text-background leading-tight"
                     whileInView={{ opacity: [0, 1], x: [-30, 0] }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}>
@@ -551,7 +551,7 @@ const Index = () => {
               <p className="text-muted-foreground mt-3 max-w-lg mx-auto">Every ChetakPlus product is designed to make writing a joyful experience</p>
             </div>
           </ScrollReveal>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {qualityCards.map((q, i) =>
             <ScrollReveal key={q.title} delay={i * 0.1}>
                 <div className="bg-card p-6 rounded-2xl border border-border/50 text-center hover-lift">
@@ -600,7 +600,7 @@ const Index = () => {
               <p className="text-muted-foreground mt-3">#ChetakPlus</p>
             </div>
           </ScrollReveal>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {testimonials.map((t, i) =>
             <ScrollReveal key={t.name} delay={i * 0.1}>
                 <div className="bg-card p-5 rounded-2xl border border-border/50 hover-lift">

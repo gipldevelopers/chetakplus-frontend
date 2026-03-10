@@ -380,7 +380,7 @@ const ProductDetail = () => {
         className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border z-40 py-3 px-4">
         
           <div className="container-custom flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="hidden sm:flex items-center gap-3 min-w-0">
               <img src={product.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground truncate">{product.name}</p>
@@ -389,7 +389,7 @@ const ProductDetail = () => {
             </div>
             <button
             onClick={() => addItem(product, quantity, selectedVariants)}
-            className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity shrink-0">
+            className="w-full sm:w-auto flex flex-1 sm:flex-none justify-center items-center gap-2 bg-primary text-primary-foreground px-6 py-3 sm:py-2.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity shrink-0">
             
               <ShoppingBag size={16} /> Add to Cart
             </button>
