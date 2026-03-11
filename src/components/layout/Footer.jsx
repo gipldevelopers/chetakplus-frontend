@@ -118,7 +118,7 @@ const Footer = () => {
               </li>
               <li className="flex items-start gap-3 text-sm text-background/60">
                 <Mail size={16} className="mt-0.5 shrink-0" />
-                <span>chetakplus84@gmail.com</span>
+                <span className="break-all">chetakplus84@gmail.com</span>
               </li>
               <li className="flex items-start gap-3 text-sm text-background/60">
                 <MapPin size={16} className="mt-0.5 shrink-0" />
