@@ -9,6 +9,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CartDrawer from "@/components/layout/CartDrawer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
@@ -34,6 +35,7 @@ const AppContent = () => {
 
   return (
     <>
+      <ScrollToTop />
       {!isAuthPage && <Navbar />}
       {!isAuthPage && <CartDrawer />}
       {!isAuthPage && <WhatsAppButton />}
