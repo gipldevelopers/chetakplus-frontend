@@ -41,20 +41,6 @@ const navLinks = [
 { name: "Shop", href: "/shop", hasMega: true },
 { name: "New Arrivals", href: "/shop?filter=new" },
 { name: "Best Sellers", href: "/shop?filter=bestseller" },
-{ name: "About", href: "/about" },
-{ name: "Contact", href: "/contact" }];
-
-
-const mobileNavLinks = [
-{ name: "Home", href: "/" },
-{ name: "Shop All", href: "/shop" },
-{ name: "Planners", href: "/category/planners" },
-{ name: "Notebooks", href: "/category/notebooks" },
-{ name: "Journals", href: "/category/journals" },
-{ name: "Office Stationery", href: "/category/office-stationery" },
-{ name: "Bundles", href: "/category/bundles" },
-{ name: "New Arrivals", href: "/shop?filter=new" },
-{ name: "Best Sellers", href: "/shop?filter=bestseller" },
 { name: "Blog", href: "/blog" },
 { name: "Corporate Orders", href: "/corporate" },
 { name: "About", href: "/about" },
@@ -63,6 +49,7 @@ const mobileNavLinks = [
 
 const Navbar = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [mobileShopOpen, setMobileShopOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const megaRef = useRef(null);
@@ -74,6 +61,7 @@ const Navbar = () => {
   // Close mobile menu on route change
   useEffect(() => {
     setIsMobileOpen(false);
+    setMobileShopOpen(false);
     setMegaOpen(false);
   }, [location.pathname]);
 
@@ -111,7 +99,7 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden lg:flex items-center gap-7">
+          <div className="hidden lg:flex items-center gap-5 xl:gap-7">
             {navLinks.map((link) =>
             <div
               key={link.name}
@@ -135,14 +123,14 @@ const Navbar = () => {
           </div>
 
           {/* Right icons */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 sm:gap-3">
             <button onClick={() => setSearchOpen(true)} className="p-2 text-foreground/70 hover:text-foreground transition-colors" aria-label="Search">
               <Search size={20} />
             </button>
-            <Link to="/signin" className="p-2 text-foreground/70 hover:text-foreground transition-colors hidden sm:block" aria-label="Sign In">
+            <Link to="/signin" className="p-2 text-foreground/70 hover:text-foreground transition-colors" aria-label="Sign In">
               <User size={20} />
             </Link>
-            <Link to="/wishlist" className="relative p-2 text-foreground/70 hover:text-foreground transition-colors hidden sm:block" aria-label="Wishlist">
+            <Link to="/wishlist" className="relative p-2 text-foreground/70 hover:text-foreground transition-colors" aria-label="Wishlist">
               <Heart size={20} />
               {wishlistCount > 0 &&
               <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
@@ -226,17 +214,72 @@ const Navbar = () => {
           exit={{ opacity: 0, height: 0 }}
           className="lg:hidden border-t border-border bg-background overflow-hidden">
           
-            <div className="container-custom py-4 space-y-1 max-h-[70vh] overflow-y-auto">
-              {mobileNavLinks.map((link) =>
-            <Link
-              key={link.name}
-              to={link.href}
-              onClick={() => setIsMobileOpen(false)}
-              className="block py-3 text-sm font-medium text-foreground/80 hover:text-primary transition-colors border-b border-border/30 last:border-0">
-              
-                  {link.name}
-                </Link>
-            )}
+            <div className="container-custom py-4 max-h-[70vh] overflow-y-auto">
+              {navLinks.map((link) => (
+                <div key={link.name} className="border-b border-border/30 last:border-0">
+                  {link.hasMega ? (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <Link
+                          to={link.href}
+                          onClick={() => setIsMobileOpen(false)}
+                          className="block py-3 text-sm font-medium text-foreground/80 hover:text-primary transition-colors flex-1"
+                        >
+                          {link.name}
+                        </Link>
+                        <button
+                          onClick={() => setMobileShopOpen(!mobileShopOpen)}
+                          className="p-3 -mr-3 text-foreground/80 hover:text-primary flex items-center justify-center"
+                          aria-label="Toggle Submenu"
+                        >
+                          <ChevronDown size={16} className={`transition-transform duration-200 ${mobileShopOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                      </div>
+                      <AnimatePresence>
+                        {mobileShopOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="pl-4 pb-3 space-y-4">
+                              {Object.entries(megaMenuData).map(([key, items]) => (
+                                <div key={key}>
+                                  <h4 className="text-xs font-bold uppercase tracking-wider text-primary mb-2">
+                                    {key === "office" ? "Office Stationery" : key.charAt(0).toUpperCase() + key.slice(1)}
+                                  </h4>
+                                  <ul className="space-y-2">
+                                    {items.map((item) => (
+                                      <li key={item.name}>
+                                        <Link
+                                          to={item.href}
+                                          onClick={() => setIsMobileOpen(false)}
+                                          className="text-sm text-foreground/70 hover:text-primary transition-colors block py-1"
+                                        >
+                                          {item.name}
+                                        </Link>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </>
+                  ) : (
+                    <Link
+                      to={link.href}
+                      onClick={() => setIsMobileOpen(false)}
+                      className="block py-3 text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
+                    >
+                      {link.name}
+                    </Link>
+                  )}
+                </div>
+              ))}
             </div>
           </motion.div>
         }
