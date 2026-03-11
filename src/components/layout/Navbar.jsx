@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, Menu, X, ChevronDown, Search, Heart, ChevronRight } from "lucide-react";
+import { ShoppingBag, Menu, X, ChevronDown, Search, Heart, ChevronRight, User } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -139,6 +139,9 @@ const Navbar = () => {
             <button onClick={() => setSearchOpen(true)} className="p-2 text-foreground/70 hover:text-foreground transition-colors" aria-label="Search">
               <Search size={20} />
             </button>
+            <Link to="/signin" className="p-2 text-foreground/70 hover:text-foreground transition-colors hidden sm:block" aria-label="Sign In">
+              <User size={20} />
+            </Link>
             <Link to="/wishlist" className="relative p-2 text-foreground/70 hover:text-foreground transition-colors hidden sm:block" aria-label="Wishlist">
               <Heart size={20} />
               {wishlistCount > 0 &&

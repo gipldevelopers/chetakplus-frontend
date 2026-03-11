@@ -94,9 +94,12 @@ const CartDrawer = () => {
                   <span className="font-display text-lg font-semibold">₹{totalPrice.toLocaleString()}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">Shipping calculated at checkout</p>
-                <button className="w-full bg-primary text-primary-foreground py-3.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity">
+                <Link 
+                  to="/checkout" 
+                  onClick={() => setIsCartOpen(false)}
+                  className="w-full bg-primary text-primary-foreground py-3.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity block text-center">
                   Checkout · ₹{totalPrice.toLocaleString()}
-                </button>
+                </Link>
               </div>
           }
           </motion.div>

@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import Navbar from "@/components/layout/Navbar";
@@ -21,8 +21,48 @@ import Wishlist from "./pages/Wishlist";
 import Blog from "./pages/Blog";
 import Corporate from "./pages/Corporate";
 import NotFound from "./pages/NotFound";
+import Checkout from "./pages/Checkout";
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
+import ForgotPassword from "./pages/ForgotPassword";
 
 const queryClient = new QueryClient();
+
+const AppContent = () => {
+  const location = useLocation();
+  const isAuthPage = ["/signin", "/signup", "/forgot-password"].includes(location.pathname);
+
+  return (
+    <>
+      {!isAuthPage && <Navbar />}
+      {!isAuthPage && <CartDrawer />}
+      {!isAuthPage && <WhatsAppButton />}
+      <main className="min-h-screen">
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/product/:slug" element={<ProductDetail />} />
+          <Route path="/category/:slug" element={<CategoryPage />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/corporate" element={<Corporate />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/privacy-policy" element={<PolicyPage />} />
+          <Route path="/shipping-policy" element={<PolicyPage />} />
+          <Route path="/refund-policy" element={<PolicyPage />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+      {!isAuthPage && <Footer />}
+    </>
+  );
+};
 
 const App = () =>
 <QueryClientProvider client={queryClient}>
@@ -32,29 +72,7 @@ const App = () =>
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Navbar />
-            <CartDrawer />
-            <WhatsAppButton />
-            <main className="min-h-screen">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/shop" element={<Shop />} />
-                <Route path="/product/:slug" element={<ProductDetail />} />
-                <Route path="/category/:slug" element={<CategoryPage />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/faq" element={<FAQ />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/corporate" element={<Corporate />} />
-                <Route path="/wishlist" element={<Wishlist />} />
-                <Route path="/privacy-policy" element={<PolicyPage />} />
-                <Route path="/shipping-policy" element={<PolicyPage />} />
-                <Route path="/refund-policy" element={<PolicyPage />} />
-                <Route path="/terms" element={<PolicyPage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </main>
-            <Footer />
+            <AppContent />
           </BrowserRouter>
         </WishlistProvider>
       </CartProvider>
