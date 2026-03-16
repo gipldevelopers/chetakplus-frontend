@@ -42,7 +42,7 @@ import catCorporateGifts from "@/assets/cat-corporate-gifts.png";
 
 // Quick browse icon strip — now with product images
 const quickBrowse = [
-  { image: plannersIcon, label: "Planners", href: "/category/planners", bg: "bg-[hsl(16_60%_52%/0.12)]" },
+  // { image: plannersIcon, label: "Planners", href: "/category/planners", bg: "bg-[hsl(16_60%_52%/0.12)]" },
   { image: notebooksIcon, label: "Notebooks", href: "/category/notebooks", bg: "bg-[hsl(160_30%_45%/0.12)]" },
   { image: journalsIcon, label: "Journals", href: "/category/journals", bg: "bg-[hsl(40_60%_50%/0.12)]" },
   { image: filesIcon, label: "Files", href: "/shop?category=office-stationery&type=files", bg: "bg-[hsl(160_30%_45%/0.12)]" },

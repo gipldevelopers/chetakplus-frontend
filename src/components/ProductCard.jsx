@@ -39,11 +39,6 @@ const ProductCard = ({ product }) => {
             {product.badge}
           </span>
         }
-        {discount > 0 &&
-        <span className="absolute top-3 right-12 bg-accent text-accent-foreground text-[10px] font-bold px-2 py-1 rounded-full">
-            -{discount}%
-          </span>
-        }
         <div
           className={`absolute bottom-3 left-3 right-3 flex gap-2 transition-all duration-300 ${
           isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`

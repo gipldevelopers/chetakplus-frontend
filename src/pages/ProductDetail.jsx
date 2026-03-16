@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Star, Minus, Plus, ShoppingBag, Heart, Truck, Shield, RotateCcw, Lock, GraduationCap, Briefcase, Target, PenTool, Layers, BookHeart, Gem } from "lucide-react";
+import { Star, Minus, Plus, ShoppingBag, Heart, Truck, Shield, RotateCcw, Lock, GraduationCap, Briefcase, Target, PenTool, Layers, BookHeart, Gem, Share2, Facebook, Twitter } from "lucide-react";
 import { motion } from "framer-motion";
 import { getProductBySlug, products } from "@/data/products";
 import { useCart } from "@/context/CartContext";
@@ -9,6 +9,23 @@ import ProductCard from "@/components/ProductCard";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
 const RECENTLY_VIEWED_KEY = "chetakplus-recently-viewed";
+const COLOR_MAP = {
+  "Red Marble": "#b91c1c",
+  "Blue Marble": "#1d4ed8",
+  "Green Marble": "#15803d",
+  "Black Marble": "#111827",
+  "Marble Red": "#b91c1c",
+  "Marble Blue": "#1d4ed8",
+  "Marble Green": "#15803d",
+  "Marble Black": "#111827",
+  "Navy": "#1e3a8a",
+  "Black": "#000000",
+  "White": "#ffffff",
+  "Tan": "#d2b48c",
+  "Brown": "#78350f",
+  "Pink": "#fbcfe8",
+  "Lavender": "#e9d5ff"
+};
 
 const ProductDetail = () => {
   const { slug } = useParams();
@@ -142,26 +159,63 @@ const ProductDetail = () => {
             <p className="text-sm text-muted-foreground mt-4 leading-relaxed">{product.shortDescription}</p>
 
             {/* Variants */}
-            {product.variants?.map((variant) =>
-            <div key={variant.label} className="mt-6">
-                <h4 className="text-sm font-medium mb-2">{variant.label}</h4>
-                <div className="flex flex-wrap gap-2">
-                  {variant.options.map((opt) =>
-                <button
-                  key={opt}
-                  onClick={() => setSelectedVariants((prev) => ({ ...prev, [variant.label]: opt }))}
-                  className={`text-xs px-4 py-2 rounded-xl border transition-colors ${
-                  selectedVariants[variant.label] === opt ?
-                  "bg-primary text-primary-foreground border-primary" :
-                  "border-border text-foreground hover:border-primary/50"}`
-                  }>
-                  
-                      {opt}
-                    </button>
-                )}
+            {product.variants?.map((variant) => {
+              const isColorVariant = variant.label.toLowerCase().includes("colo");
+              
+              return (
+                <div key={variant.label} className="mt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-semibold">{variant.label}</h4>
+                    {selectedVariants[variant.label] && (
+                      <span className="text-xs text-muted-foreground">{selectedVariants[variant.label]}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {variant.options.map((opt) => {
+                      const hexColor = COLOR_MAP[opt];
+                      
+                      if (isColorVariant && hexColor) {
+                        return (
+                          <button
+                            key={opt}
+                            onClick={() => setSelectedVariants((prev) => ({ ...prev, [variant.label]: opt }))}
+                            className={`group relative flex items-center justify-center w-9 h-9 rounded-full border-2 transition-all ${
+                              selectedVariants[variant.label] === opt
+                                ? "border-primary scale-110 shadow-md"
+                                : "border-transparent hover:border-border"
+                            }`}
+                            title={opt}
+                          >
+                            <span 
+                              className="w-7 h-7 rounded-full border border-black/5" 
+                              style={{ backgroundColor: hexColor }}
+                            />
+                            {/* Tooltip for mobile or desktop hover */}
+                            <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                              {opt}
+                            </span>
+                          </button>
+                        );
+                      }
+
+                      return (
+                        <button
+                          key={opt}
+                          onClick={() => setSelectedVariants((prev) => ({ ...prev, [variant.label]: opt }))}
+                          className={`text-xs px-4 py-2 rounded-xl border font-medium transition-all ${
+                            selectedVariants[variant.label] === opt
+                              ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                              : "border-border text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })}
 
             {/* Quantity & Actions */}
             <div className="mt-8 space-y-4">
@@ -210,6 +264,46 @@ const ProductDetail = () => {
                   <p className="text-xs font-medium text-foreground">{b.label}</p>
                 </div>
               )}
+            </div>
+
+            {/* Share */}
+            <div className="mt-8 flex items-center gap-4">
+              <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Share2 size={16} className="text-primary" /> Share Product:
+              </span>
+              <div className="flex gap-3">
+                <a 
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-[#1877F2] hover:text-white transition-all shadow-sm"
+                  title="Share on Facebook"
+                >
+                  <Facebook size={18} />
+                </a>
+                <a 
+                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(product.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-black hover:text-white transition-all shadow-sm"
+                  title="Share on X"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-[18px] h-[18px]">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                </a>
+                <a 
+                  href={`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(window.location.href)}&media=${encodeURIComponent(product.images[0])}&description=${encodeURIComponent(product.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-[#E60023] hover:text-white transition-all shadow-sm"
+                  title="Share on Pinterest"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-[18px] h-[18px]">
+                    <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.965 1.406-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.261 7.929-7.261 4.162 0 7.398 2.965 7.398 6.93 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146 1.124.347 2.317.535 3.554.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.39 18.592.026 11.985.026L12.017 0z" />
+                  </svg>
+                </a>
+              </div>
             </div>
           </motion.div>
         </div>

@@ -35,13 +35,13 @@ const Footer = () => {
               Premium quality paper stationery for students, professionals, and everyone who loves to write.
             </p>
             <div className="flex gap-4">
-              <a href="#" className="text-background/50 hover:text-primary transition-colors" aria-label="Instagram">
+              <a href="#" className="text-background/50 hover:text-white transition-colors" aria-label="Instagram">
                 <Instagram size={20} />
               </a>
-              <a href="#" className="text-background/50 hover:text-primary transition-colors" aria-label="Facebook">
+              <a href="#" className="text-background/50 hover:text-white transition-colors" aria-label="Facebook">
                 <Facebook size={20} />
               </a>
-              <a href="#" className="text-background/50 hover:text-primary transition-colors" aria-label="Twitter">
+              <a href="#" className="text-background/50 hover:text-white transition-colors" aria-label="Twitter">
                 <Twitter size={20} />
               </a>
             </div>
@@ -61,7 +61,7 @@ const Footer = () => {
               { name: "Best Sellers", href: "/shop?filter=bestseller" }].
               map((link) =>
               <li key={link.name}>
-                  <Link to={link.href} className="text-sm text-background/60 hover:text-primary transition-colors">
+                  <Link to={link.href} className="text-sm text-background/60 hover:text-white transition-colors">
                     {link.name}
                   </Link>
                 </li>
@@ -81,7 +81,7 @@ const Footer = () => {
               { name: "FAQ", href: "/faq" }].
               map((link) =>
               <li key={link.name}>
-                  <Link to={link.href} className="text-sm text-background/60 hover:text-primary transition-colors">
+                  <Link to={link.href} className="text-sm text-background/60 hover:text-white transition-colors">
                     {link.name}
                   </Link>
                 </li>
@@ -100,7 +100,7 @@ const Footer = () => {
               { name: "Terms & Conditions", href: "/terms" }].
               map((link) =>
               <li key={link.name}>
-                  <Link to={link.href} className="text-sm text-background/60 hover:text-primary transition-colors">
+                  <Link to={link.href} className="text-sm text-background/60 hover:text-white transition-colors">
                     {link.name}
                   </Link>
                 </li>
@@ -133,9 +133,9 @@ const Footer = () => {
             © {new Date().getFullYear()} ChetakPlus. All rights reserved. Premium Stationery Since 1984.
           </p>
           <div className="flex gap-6 text-xs text-background/40">
-            <Link to="/privacy-policy" className="hover:text-primary transition-colors">Privacy</Link>
-            <Link to="/terms" className="hover:text-primary transition-colors">Terms</Link>
-            <Link to="/shipping-policy" className="hover:text-primary transition-colors">Shipping</Link>
+            <Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+            <Link to="/shipping-policy" className="hover:text-white transition-colors">Shipping</Link>
           </div>
         </div>
       </div>

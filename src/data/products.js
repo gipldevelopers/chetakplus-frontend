@@ -112,7 +112,9 @@ export const products = [
     "MOQ": "100 pcs"
   },
   variants: [
-  { label: "Pages", options: ["96 Pages", "192 Pages", "288 Pages", "384 Pages"] }],
+    { label: "Size", options: ["A5", "B5"] },
+    { label: "Pages", options: ["96 Pages", "192 Pages", "288 Pages", "384 Pages"] }
+  ],
 
   badge: "New Arrival",
   inStock: true,
@@ -188,8 +190,10 @@ export const products = [
     "MOQ": "200 pcs"
   },
   variants: [
-  { label: "Sheets", options: ["76 Sheets", "120 Sheets"] },
-  { label: "Type", options: ["Ruled", "Unruled"] }],
+    { label: "Size", options: ["A5", "A6"] },
+    { label: "Sheets", options: ["76 Sheets", "120 Sheets"] },
+    { label: "Type", options: ["Ruled", "Unruled"] }
+  ],
 
   badge: "Trending",
   inStock: true,
@@ -416,6 +420,9 @@ export const products = [
     "Pages": "240",
     "Cover": "Faux Leather"
   },
+  variants: [
+    { label: "Size", options: ["A4", "A5", "A6"] }
+  ],
   badge: "Premium",
   inStock: true,
   perfectFor: ["Journaling", "Creative writing", "Gifting"],
