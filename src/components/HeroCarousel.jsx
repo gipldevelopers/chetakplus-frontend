@@ -27,7 +27,7 @@ const slides = [
   },
   {
     id: 2,
-    badge: "New Collection · 2025",
+    badge: "New Collection · 2026",
     title: "Plan Your",
     highlight: "Best Year Yet",
     description: "Discover our curated collection of daily & weekly planners engineered for peak performance.",
