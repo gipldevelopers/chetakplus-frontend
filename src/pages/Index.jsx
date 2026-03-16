@@ -36,6 +36,9 @@ import stickyNotesIcon from "@/assets/icons/sticky-notes-icon.png";
 import giftSetsIcon from "@/assets/icons/gift-sets-icon.png";
 import newInIcon from "@/assets/icons/new-in-icon.png";
 import bestSellersIcon from "@/assets/icons/best-sellers-icon.png";
+import catOfficeStationery from "@/assets/cat-office-stationery.png";
+import catSchoolStationery from "@/assets/cat-school-stationery.png";
+import catCorporateGifts from "@/assets/cat-corporate-gifts.png";
 
 // Quick browse icon strip — now with product images
 const quickBrowse = [
@@ -116,6 +119,65 @@ const Index = () => {
     <div>
       {/* Hero Carousel */}
       <HeroCarousel />
+
+      {/* Top Category Cards — Office, School, Corporate */}
+      <section className="py-10 sm:py-14 bg-background">
+        <div className="container-custom">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
+            {[
+              {
+                title: "Office Stationery",
+                desc: "Desk essentials for the modern workspace",
+                image: catOfficeStationery,
+                href: "/category/office-stationery",
+                gradient: "from-[hsl(220,45%,20%/0.85)] to-[hsl(220,40%,30%/0.4)]",
+              },
+              {
+                title: "School Stationery",
+                desc: "Everything students need to excel",
+                image: catSchoolStationery,
+                href: "/shop?category=school",
+                gradient: "from-[hsl(160,35%,25%/0.85)] to-[hsl(150,30%,35%/0.4)]",
+              },
+              {
+                title: "Corporate Gifts",
+                desc: "Premium gifting for every milestone",
+                image: catCorporateGifts,
+                href: "/corporate",
+                gradient: "from-[hsl(30,40%,20%/0.85)] to-[hsl(35,35%,30%/0.4)]",
+              },
+            ].map((cat, i) => (
+              <ScrollReveal key={cat.title} delay={i * 0.1}>
+                <Link
+                  to={cat.href}
+                  className="group relative block rounded-2xl overflow-hidden hover-lift shadow-sm"
+                >
+                  <div className="aspect-[16/10] sm:aspect-[4/3] relative">
+                    <img
+                      src={cat.image}
+                      alt={cat.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity`} />
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
+                    <h3 className="font-display text-xl sm:text-2xl font-bold text-white leading-tight drop-shadow-md">
+                      {cat.title}
+                    </h3>
+                    <p className="text-white/90 text-xs sm:text-sm mt-1 drop-shadow-sm max-w-[90%] font-medium">
+                      {cat.desc}
+                    </p>
+                    <span className="inline-flex items-center gap-1 text-white font-semibold text-xs mt-4 group-hover:text-primary-foreground bg-white/10 px-3 py-1 rounded-full backdrop-blur-md border border-white/20 transition-all">
+                      Explore <ChevronRight size={14} />
+                    </span>
+                  </div>
+                </Link>
+              </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Quick Browse Icon Strip */}
       <section className="py-8 border-b border-border/50 bg-card">
