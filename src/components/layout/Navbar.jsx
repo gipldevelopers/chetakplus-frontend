@@ -7,12 +7,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import SearchModal from "@/components/SearchModal";
 
 const megaMenuData = {
-  planners: [
-  { name: "All Planners", href: "/category/planners" },
-  { name: "Weekly Planners", href: "/shop?category=planners&type=weekly" },
-  { name: "Daily Planners", href: "/shop?category=planners&type=daily" },
-  { name: "Monthly Planners", href: "/shop?category=planners&type=monthly" },
-  { name: "Study Planners", href: "/shop?category=planners&type=study" }],
+  // planners: [
+  // { name: "All Planners", href: "/category/planners" },
+  // { name: "Weekly Planners", href: "/shop?category=planners&type=weekly" },
+  // { name: "Daily Planners", href: "/shop?category=planners&type=daily" },
+  // { name: "Monthly Planners", href: "/shop?category=planners&type=monthly" },
+  // { name: "Study Planners", href: "/shop?category=planners&type=study" }],
 
   notebooks: [
   { name: "All Notebooks", href: "/category/notebooks" },
@@ -92,10 +92,8 @@ const Navbar = () => {
           </button>
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <span className="font-display text-xl lg:text-2xl font-bold tracking-tight text-foreground">
-              Chetak<span className="text-primary">Plus</span>
-            </span>
+          <Link to="/" className="flex items-center">
+            <img src="/logo.jpg" alt="ChetakPlus" className="h-10 lg:h-12 w-auto object-contain" />
           </Link>
 
           {/* Desktop nav */}

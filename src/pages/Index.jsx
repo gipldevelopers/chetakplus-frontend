@@ -3,9 +3,8 @@ import { ArrowRight, BookOpen, Target, Calendar, Award, Star, ChevronRight, Truc
 import { motion } from "framer-motion";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import ProductCard from "@/components/ProductCard";
+import HeroCarousel from "@/components/HeroCarousel";
 import { getBestSellers, getTrending, getNewArrivals, getBundles, getFeaturedProduct, products } from "@/data/products";
-import heroBanner from "@/assets/hero-banner.jpg";
-import heroBannerVideo from "@/assets/hero-banner.mp4";
 import categoryPlanners from "@/assets/category-planners.jpg";
 import categoryNotebooks from "@/assets/category-notebooks.jpg";
 import categoryJournals from "@/assets/category-journals.jpg";
@@ -115,88 +114,8 @@ const Index = () => {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-cream">
-        <div className="container-custom">
-          <div className="grid lg:grid-cols-2 gap-8 items-center min-h-[70vh] py-12 lg:py-0">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7 }}
-              className="space-y-6"
-            >
-              <span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-primary bg-primary/10 px-4 py-1.5 rounded-full">
-                Premium Stationery · Since 1984
-              </span>
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] text-foreground">
-                Write Your <br />
-                <span className="text-primary">Success Story</span>
-              </h1>
-              <p className="text-base lg:text-lg text-muted-foreground max-w-md leading-relaxed">
-                Premium planners, notebooks & stationery designed to fuel your productivity and creativity.
-              </p>
-              <div className="flex flex-wrap gap-3 pt-2">
-                <Link
-                  to="/shop"
-                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-7 py-3.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
-                >
-                  Shop Now <ArrowRight size={16} />
-                </Link>
-                <Link
-                  to="/category/planners"
-                  className="inline-flex items-center gap-2 bg-secondary text-secondary-foreground px-7 py-3.5 rounded-xl font-semibold text-sm hover:bg-secondary/80 transition-colors"
-                >
-                  Explore Planners
-                </Link>
-              </div>
-              <div className="flex flex-wrap gap-5 pt-4">
-                {[
-                  { icon: Truck, label: "Free Shipping 999+" },
-                  { icon: Shield, label: "Premium Quality" },
-                  { icon: Sparkles, label: "Since 1984" },
-                ].map((f) => (
-                  <div key={f.label} className="flex items-center gap-2 text-muted-foreground">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <f.icon size={16} className="text-primary" />
-                    </div>
-                    <span className="text-xs font-medium">{f.label}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="relative"
-            >
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-                <video src={heroBannerVideo} autoPlay loop muted playsInline className="w-full rounded-3xl" poster={heroBanner} />
-              </div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8, duration: 0.5 }}
-                className="absolute -bottom-6 left-4 right-4 sm:left-6 sm:right-6 bg-card/90 backdrop-blur-md rounded-2xl p-4 border border-border/50 shadow-lg"
-              >
-                <div className="grid grid-cols-3 divide-x divide-border">
-                  {[
-                    { val: "40+", label: "Years Legacy" },
-                    { val: "50K+", label: "Happy Customers" },
-                    { val: "100+", label: "Products" },
-                  ].map((s) => (
-                    <div key={s.label} className="text-center px-2">
-                      <p className="text-lg sm:text-xl font-bold text-primary">{s.val}</p>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">{s.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
+      {/* Hero Carousel */}
+      <HeroCarousel />
 
       {/* Quick Browse Icon Strip */}
       <section className="py-8 border-b border-border/50 bg-card">

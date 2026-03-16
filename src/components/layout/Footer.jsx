@@ -28,9 +28,9 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <h3 className="font-display text-2xl font-bold mb-4">
-              Chetak<span className="text-primary">Plus</span>
-            </h3>
+            <div className="mb-4">
+              <img src="/logo.jpg" alt="ChetakPlus" className="h-10 lg:h-12 w-auto object-contain" />
+            </div>
             <p className="text-background/60 text-sm leading-relaxed mb-6">
               Premium quality paper stationery for students, professionals, and everyone who loves to write.
             </p>

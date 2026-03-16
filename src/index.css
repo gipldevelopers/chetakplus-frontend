@@ -123,3 +123,136 @@
     display: none;
   }
 }
+
+/* ── Hero Carousel ───────────────────────────────── */
+.hero-carousel {
+  position: relative;
+}
+
+.hero-carousel__bg-accent {
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background: radial-gradient(ellipse 60% 80% at 80% 40%, hsl(var(--primary)), transparent);
+  pointer-events: none;
+  transition: background 0.6s ease;
+}
+
+/* Navigation arrows */
+.hero-carousel__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(var(--card) / 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid hsl(var(--border) / 0.5);
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px hsl(var(--foreground) / 0.08);
+}
+
+.hero-carousel:hover .hero-carousel__arrow {
+  opacity: 1;
+}
+
+.hero-carousel__arrow:hover {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+  transform: translateY(-50%) scale(1.08);
+}
+
+.hero-carousel__arrow--left {
+  left: 16px;
+}
+
+.hero-carousel__arrow--right {
+  right: 16px;
+}
+
+/* Dot indicators */
+.hero-carousel__dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.hero-carousel__dot {
+  position: relative;
+  width: 32px;
+  height: 4px;
+  border-radius: 9999px;
+  background: hsl(var(--foreground) / 0.15);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.hero-carousel__dot--active {
+  width: 48px;
+  background: hsl(var(--foreground) / 0.12);
+}
+
+.hero-carousel__dot-progress {
+  position: absolute;
+  inset: 0;
+  background: hsl(var(--primary));
+  border-radius: 9999px;
+  animation: hero-dot-fill linear forwards;
+  transform-origin: left;
+}
+
+@keyframes hero-dot-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Responsive tweaks */
+@media (max-width: 1024px) {
+  .hero-carousel__arrow {
+    width: 36px;
+    height: 36px;
+  }
+  .hero-carousel__arrow--left {
+    left: 8px;
+  }
+  .hero-carousel__arrow--right {
+    right: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-carousel__arrow {
+    display: none;
+  }
+  .hero-carousel__dots {
+    bottom: 12px;
+  }
+  .hero-carousel__dot {
+    width: 24px;
+    height: 3px;
+  }
+  .hero-carousel__dot--active {
+    width: 36px;
+  }
+}
