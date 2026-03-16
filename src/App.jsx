@@ -10,6 +10,7 @@ import Footer from "@/components/layout/Footer";
 import CartDrawer from "@/components/layout/CartDrawer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import ScrollToTop from "@/components/ScrollToTop";
+import OfferPopup from "@/components/OfferPopup";
 import Index from "./pages/Index";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
@@ -39,6 +40,7 @@ const AppContent = () => {
       {!isAuthPage && <Navbar />}
       {!isAuthPage && <CartDrawer />}
       {!isAuthPage && <WhatsAppButton />}
+      {!isAuthPage && <OfferPopup />}
       <main className="min-h-screen">
         <Routes>
           <Route path="/" element={<Index />} />
