@@ -23,6 +23,7 @@ const slides = [
       { val: "100+", label: "Products" },
     ],
     accentColor: "from-[hsl(220,45%,25%)] to-[hsl(220,55%,35%)]",
+    bgClass: "bg-[#f0f4f8]", // Soft Navy Frost
   },
   {
     id: 2,
@@ -39,6 +40,7 @@ const slides = [
       { val: "4.8★", label: "Avg Rating" },
     ],
     accentColor: "from-[hsl(150,25%,40%)] to-[hsl(160,30%,50%)]",
+    bgClass: "bg-[#f1f8f4]", // Soft Mint Sage
   },
   {
     id: 3,
@@ -55,6 +57,7 @@ const slides = [
       { val: "Free", label: "Gift Wrapping" },
     ],
     accentColor: "from-[hsl(350,40%,45%)] to-[hsl(340,50%,55%)]",
+    bgClass: "bg-[#fdf8f7]", // Soft Rose/Blush
   },
 ];
 
@@ -96,7 +99,6 @@ const mediaVariants = {
 const HeroCarousel = () => {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
-  const [isPaused, setIsPaused] = useState(false);
 
   const goToSlide = useCallback((index) => {
     setDirection(index > current ? 1 : -1);
@@ -114,21 +116,23 @@ const HeroCarousel = () => {
   }, []);
 
   useEffect(() => {
-    if (isPaused) return;
     const timer = setInterval(nextSlide, AUTOPLAY_INTERVAL);
     return () => clearInterval(timer);
-  }, [isPaused, nextSlide]);
+  }, [nextSlide]);
 
   const slide = slides[current];
 
   return (
     <section
-      className="hero-carousel relative overflow-hidden bg-cream"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
+      className={`hero-carousel relative overflow-hidden transition-all duration-700 ease-in-out ${slide.bgClass}`}
     >
       {/* Background gradient accent tied to slide */}
-      <div className="hero-carousel__bg-accent" />
+      <div 
+        className="hero-carousel__bg-accent opacity-10 transition-all duration-1000" 
+        style={{ 
+          background: `radial-gradient(ellipse 60% 80% at 80% 40%, ${slide.id === 1 ? '#0f172a' : slide.id === 2 ? '#065f46' : '#991b1b'}33, transparent)`
+        }}
+      />
 
       <div className="container-custom">
         <div className="grid lg:grid-cols-2 gap-8 items-center min-h-[70vh] py-12 lg:py-0">
@@ -263,7 +267,7 @@ const HeroCarousel = () => {
             className={`hero-carousel__dot ${i === current ? "hero-carousel__dot--active" : ""}`}
             aria-label={`Go to slide ${i + 1}`}
           >
-            {i === current && !isPaused && (
+            {i === current && (
               <span
                 className="hero-carousel__dot-progress"
                 style={{ animationDuration: `${AUTOPLAY_INTERVAL}ms` }}
