@@ -52,7 +52,7 @@ const CategoryPage = () => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="text-sm border border-border rounded-xl px-4 py-2 bg-background text-foreground focus:outline-none">
+            className="max-w-[160px] text-sm border border-border rounded-xl px-3 py-2 bg-background text-foreground focus:outline-none">
             
             <option value="featured">Featured</option>
             <option value="price-asc">Price: Low to High</option>

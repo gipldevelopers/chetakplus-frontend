@@ -24,8 +24,8 @@ const Footer = () => {
         </div>
       </div>
 
-      <div className="container-custom py-16">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10">
+      <div className="container-custom py-12 px-4 sm:px-0">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <div className="mb-4">
@@ -70,7 +70,7 @@ const Footer = () => {
           </div>
 
           {/* Company */}
-          <div>
+          <div className="-ml-2">
             <h4 className="font-semibold text-sm uppercase tracking-wider mb-4">Company</h4>
             <ul className="space-y-3">
               {[
@@ -109,18 +109,18 @@ const Footer = () => {
           </div>
 
           {/* Contact */}
-          <div>
+          <div className="-ml-2">
             <h4 className="font-semibold text-sm uppercase tracking-wider mb-4">Contact Us</h4>
             <ul className="space-y-3">
-              <li className="flex items-start gap-3 text-sm text-background/60">
+              <li className="flex items-start gap-2 text-sm text-background/60">
                 <Phone size={16} className="mt-0.5 shrink-0" />
                 <span>079-22131764 / 22132622</span>
               </li>
-              <li className="flex items-start gap-3 text-sm text-background/60">
+              <div className="flex items-start gap-3 text-sm text-background/60 w-full">
                 <Mail size={16} className="mt-0.5 shrink-0" />
-                <span className="break-all">chetakplus84@gmail.com</span>
-              </li>
-              <li className="flex items-start gap-3 text-sm text-background/60">
+                <span className="break-words">chetakplus84@gmail.com</span>
+              </div>
+              <li className="flex items-start gap-2 text-sm text-background/60">
                 <MapPin size={16} className="mt-0.5 shrink-0" />
                 <span>Ahmedabad, Gujarat, India</span>
               </li>

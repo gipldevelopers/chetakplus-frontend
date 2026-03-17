@@ -123,7 +123,7 @@ const Index = () => {
       {/* Top Category Cards — Office, School, Corporate */}
       <section className="py-10 sm:py-14 bg-background">
         <div className="container-custom">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
+          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide sm:grid sm:grid-cols-3 sm:gap-4 lg:gap-6 sm:overflow-visible sm:snap-none sm:pb-0">
             {[
               {
                 title: "Office Stationery",
@@ -147,7 +147,11 @@ const Index = () => {
                 gradient: "from-[hsl(30,40%,20%/0.85)] to-[hsl(35,35%,30%/0.4)]",
               },
             ].map((cat, i) => (
-              <ScrollReveal key={cat.title} delay={i * 0.1}>
+              <ScrollReveal
+                key={cat.title}
+                delay={i * 0.1}
+                className="shrink-0 snap-start w-[85%] max-w-[420px] sm:w-auto sm:max-w-none"
+              >
                 <Link
                   to={cat.href}
                   className="group relative block rounded-2xl overflow-hidden hover-lift shadow-sm"
@@ -182,7 +186,7 @@ const Index = () => {
       {/* Quick Browse Icon Strip */}
       <section className="py-8 border-b border-border/50 bg-card">
         <div className="container-custom">
-          <div className="flex justify-center gap-6 sm:gap-8 lg:gap-10 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 lg:gap-10">
             {quickBrowse.map((item, i) => (
               <motion.div
                 key={item.label}
@@ -194,7 +198,7 @@ const Index = () => {
                   to={item.href}
                   className="flex flex-col items-center gap-2.5 min-w-[72px] group"
                 >
-                  <div className={`w-14 h-14 rounded-full ${item.bg} flex items-center justify-center group-hover:scale-110 group-hover:shadow-md transition-all duration-300 overflow-hidden`}>
+                  <div className={`w-16 h-16 sm:w-14 sm:h-14 rounded-full ${item.bg} flex items-center justify-center group-hover:scale-110 group-hover:shadow-md transition-all duration-300 overflow-hidden`}>
                     <img src={item.image} alt={item.label} className="w-full h-full object-cover rounded-full" />
                   </div>
                   <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-foreground whitespace-nowrap transition-colors">{item.label}</span>
@@ -255,7 +259,7 @@ const Index = () => {
               whileHover={{ scale: 1.02 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Link to="/shop?filter=bestseller" className="group relative block rounded-2xl overflow-hidden aspect-[4/5]">
+              <Link to="/shop?filter=bestseller" className="group relative block rounded-2xl overflow-hidden aspect-[16/9] sm:aspect-[4/5]">
                 <video src={bestSellersBanner} autoPlay loop muted playsInline className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
@@ -280,7 +284,7 @@ const Index = () => {
               whileHover={{ scale: 1.02 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Link to="/shop?filter=new" className="group relative block rounded-2xl overflow-hidden aspect-[4/5]">
+              <Link to="/shop?filter=new" className="group relative block rounded-2xl overflow-hidden aspect-[16/9] sm:aspect-[4/5]">
                 <video src={newArrivalsBanner} autoPlay loop muted playsInline className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
@@ -305,7 +309,7 @@ const Index = () => {
               whileHover={{ scale: 1.02 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Link to="/category/bundles" className="group relative block rounded-2xl overflow-hidden aspect-[4/5]">
+              <Link to="/category/bundles" className="group relative block rounded-2xl overflow-hidden aspect-[16/9] sm:aspect-[4/5]">
                 <video src={giftHampersBanner} autoPlay loop muted playsInline className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
@@ -447,15 +451,16 @@ const Index = () => {
                   <span className="text-xs font-bold uppercase tracking-wider text-primary">Just Launched</span>
                   <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground mt-1">New Arrivals</h2>
                   <p className="text-muted-foreground mt-2">Discover our latest planners and notebooks</p>
+                  <p className="text-xs text-muted-foreground mt-1 sm:hidden"> Swipe to explore →</p>
                 </div>
                 <Link to="/shop?filter=new" className="hidden sm:flex items-center gap-1 text-sm font-medium text-primary hover:underline">
                   View All <ArrowRight size={14} />
                 </Link>
               </div>
             </ScrollReveal>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible">
               {newArrivals.slice(0, 4).map((product, i) => (
-                <ScrollReveal key={product.id} delay={i * 0.1}>
+                <ScrollReveal key={product.id} delay={i * 0.1} className="min-w-[65%] sm:min-w-[220px] lg:min-w-0 snap-start">
                   <ProductCard product={product} />
                 </ScrollReveal>
               ))}
@@ -473,15 +478,16 @@ const Index = () => {
                 <span className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1"><Flame size={14} /> Most Popular</span>
                 <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground mt-1">Best Sellers</h2>
                 <p className="text-muted-foreground mt-2">Most loved by our customers</p>
+                <p className="text-xs text-muted-foreground mt-1 sm:hidden">Swipe to explore →</p>
               </div>
               <Link to="/shop?filter=bestseller" className="hidden sm:flex items-center gap-1 text-sm font-medium text-primary hover:underline">
                 View All <ArrowRight size={14} />
               </Link>
             </div>
           </ScrollReveal>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible">
             {bestSellers.slice(0, 4).map((product, i) => (
-              <ScrollReveal key={product.id} delay={i * 0.1}>
+              <ScrollReveal key={product.id} delay={i * 0.1} className="min-w-[65%] sm:min-w-[220px] lg:min-w-0 snap-start">
                 <ProductCard product={product} />
               </ScrollReveal>
             ))}
@@ -530,10 +536,12 @@ const Index = () => {
                 </Link>
               </div>
             </ScrollReveal>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible">
               {bundles.slice(0, 3).map((product, i) => (
-                <ScrollReveal key={product.id} delay={i * 0.1}>
-                  <ProductCard product={product} />
+                <ScrollReveal key={product.id} delay={i * 0.1}  className="min-w-[75%] sm:min-w-0 snap-start">
+                  <div className="h-[360px] sm:h-auto overflow-hidden">
+                    <ProductCard product={product}/>
+                  </div>
                 </ScrollReveal>
               ))}
             </div>

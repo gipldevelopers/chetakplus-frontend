@@ -1,9 +1,13 @@
 
+
 import { ArrowRight, Calendar } from "lucide-react";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import heroBanner from "@/assets/hero-banner.jpg";
 import categoryPlanners from "@/assets/category-planners.jpg";
 import categoryNotebooks from "@/assets/category-notebooks.jpg";
+import timeblocking from "@/assets/timeblocking.jpeg";
+import ecofriendly from "@/assets/ecofriendly.avif";
+import plannercustom from "@/assets/plannercustom.jpeg";
 
 const blogPosts = [
 {
@@ -29,6 +33,30 @@ const blogPosts = [
   date: "February 20, 2026",
   category: "Journaling",
   slug: "daily-journaling-tips"
+},
+{
+  title: "Time-Blocking Techniques for Busy Professionals",
+  excerpt: "Learn how to effectively divide your day using time-blocking in planners to increase focus, reduce distractions, and get more done in less time.",
+  image: timeblocking,
+  date: "March 10, 2026",
+  category: "Productivity",
+  slug: "time-blocking-techniques"
+},
+{
+  title: "Eco-Friendly Planners: Sustainable Choices for 2026",
+  excerpt: "Explore the best eco-friendly and sustainable planners available this year. Make your planning routine environmentally conscious without sacrificing style.",
+  image: ecofriendly,
+  date: "March 12, 2026",
+  category: "Sustainability",
+  slug: "eco-friendly-planners-2026"
+},
+{
+  title: "Planner Customization Tips: Make It Truly Yours",
+  excerpt: "Discover ways to personalize your planner with layouts, stickers, and trackers to make it fit your unique workflow and lifestyle.",
+  image: plannercustom,
+  date: "March 15, 2026",
+  category: "Guides",
+  slug: "planner-customization-tips"
 }];
 
 
