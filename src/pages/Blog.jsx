@@ -1,63 +1,9 @@
 
 
 import { ArrowRight, Calendar } from "lucide-react";
+import { Link } from "react-router-dom";
 import ScrollReveal from "@/components/ui/ScrollReveal";
-import heroBanner from "@/assets/hero-banner.jpg";
-import categoryPlanners from "@/assets/category-planners.jpg";
-import categoryNotebooks from "@/assets/category-notebooks.jpg";
-import timeblocking from "@/assets/timeblocking.jpeg";
-import ecofriendly from "@/assets/ecofriendly.avif";
-import plannercustom from "@/assets/plannercustom.jpeg";
-
-const blogPosts = [
-{
-  title: "How to Stay Productive Using Planners",
-  excerpt: "Discover proven strategies to maximize your productivity with weekly and daily planners. From time-blocking to goal setting, learn how a simple planner can transform your routine.",
-  image: heroBanner,
-  date: "March 5, 2026",
-  category: "Productivity",
-  slug: "stay-productive-using-planners"
-},
-{
-  title: "Best Planners for Students in 2026",
-  excerpt: "A comprehensive guide to choosing the right planner for your academic journey. Compare features, layouts, and paper quality to find your perfect match.",
-  image: categoryPlanners,
-  date: "February 28, 2026",
-  category: "Guides",
-  slug: "best-planners-for-students"
-},
-{
-  title: "Daily Journaling Tips for Beginners",
-  excerpt: "Starting a journaling habit doesn't have to be overwhelming. Here are simple tips to build a consistent practice that brings clarity and creativity to your life.",
-  image: categoryNotebooks,
-  date: "February 20, 2026",
-  category: "Journaling",
-  slug: "daily-journaling-tips"
-},
-{
-  title: "Time-Blocking Techniques for Busy Professionals",
-  excerpt: "Learn how to effectively divide your day using time-blocking in planners to increase focus, reduce distractions, and get more done in less time.",
-  image: timeblocking,
-  date: "March 10, 2026",
-  category: "Productivity",
-  slug: "time-blocking-techniques"
-},
-{
-  title: "Eco-Friendly Planners: Sustainable Choices for 2026",
-  excerpt: "Explore the best eco-friendly and sustainable planners available this year. Make your planning routine environmentally conscious without sacrificing style.",
-  image: ecofriendly,
-  date: "March 12, 2026",
-  category: "Sustainability",
-  slug: "eco-friendly-planners-2026"
-},
-{
-  title: "Planner Customization Tips: Make It Truly Yours",
-  excerpt: "Discover ways to personalize your planner with layouts, stickers, and trackers to make it fit your unique workflow and lifestyle.",
-  image: plannercustom,
-  date: "March 15, 2026",
-  category: "Guides",
-  slug: "planner-customization-tips"
-}];
+import { blogPosts } from "@/data/blogPosts";
 
 
 const Blog = () => {
@@ -96,9 +42,12 @@ const Blog = () => {
                       {post.title}
                     </h2>
                     <p className="text-sm text-muted-foreground line-clamp-3 mb-4">{post.excerpt}</p>
-                    <span className="text-sm font-semibold text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <Link
+                      to={`/blog/${post.slug}`}
+                      className="text-sm font-semibold text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all"
+                    >
                       Read More <ArrowRight size={14} />
-                    </span>
+                    </Link>
                   </div>
                 </article>
               </ScrollReveal>

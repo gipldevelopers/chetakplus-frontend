@@ -21,6 +21,7 @@ import FAQ from "./pages/FAQ";
 import PolicyPage from "./pages/PolicyPage";
 import Wishlist from "./pages/Wishlist";
 import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import Corporate from "./pages/Corporate";
 import NotFound from "./pages/NotFound";
 import Checkout from "./pages/Checkout";
@@ -51,6 +52,7 @@ const AppContent = () => {
           <Route path="/contact" element={<Contact />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/corporate" element={<Corporate />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/privacy-policy" element={<PolicyPage />} />
