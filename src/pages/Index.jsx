@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import ProductCard from "@/components/ProductCard";
 import HeroCarousel from "@/components/HeroCarousel";
-import { getBestSellers, getTrending, getNewArrivals, getBundles, getFeaturedProduct, products } from "@/data/products";
+import { useData } from "@/context/DataContext";
 import categoryPlanners from "@/assets/category-planners.jpg";
 import categoryNotebooks from "@/assets/category-notebooks.jpg";
 import categoryJournals from "@/assets/category-journals.jpg";
@@ -106,6 +106,16 @@ const testimonials = [
 ];
 
 const Index = () => {
+  const {
+    products,
+    getBestSellers,
+    getTrending,
+    getNewArrivals,
+    getBundles,
+    getFeaturedProduct,
+    loading
+  } = useData();
+
   const bestSellers = getBestSellers();
   const trending = getTrending();
   const newArrivals = getNewArrivals();
@@ -114,6 +124,10 @@ const Index = () => {
 
   const getProductsByBudget = (max) =>
     products.filter((p) => p.price <= max && p.inStock).slice(0, 4);
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div>
@@ -538,9 +552,9 @@ const Index = () => {
             </ScrollReveal>
             <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible">
               {bundles.slice(0, 3).map((product, i) => (
-                <ScrollReveal key={product.id} delay={i * 0.1}  className="min-w-[75%] sm:min-w-0 snap-start">
+                <ScrollReveal key={product.id} delay={i * 0.1} className="min-w-[75%] sm:min-w-0 snap-start">
                   <div className="h-[360px] sm:h-auto overflow-hidden">
-                    <ProductCard product={product}/>
+                    <ProductCard product={product} />
                   </div>
                 </ScrollReveal>
               ))}
