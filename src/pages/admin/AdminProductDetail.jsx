@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useData } from '@/context/DataContext';
 import { ArrowLeft, Edit2, Info, LayoutList, PackageOpen, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,29 +10,27 @@ const AdminProductDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
 
-    // Mock product data
+    const { products } = useData();
+
+    const realProduct = products?.find(p => p.id.toString() === id || p.slug === id);
+
+    if (!realProduct) {
+        return <div className="p-12 text-center text-muted-foreground animate-pulse font-medium">Loading or Product not found...</div>;
+    }
+
     const product = {
-        id: id || 'PROD-001',
-        name: 'Premium Wireless Noise-Cancelling Headphones',
-        price: 299.99,
-        compareAtPrice: 349.99,
-        category: 'Electronics',
-        status: 'Active',
-        stock: 45,
-        description: 'Experience immersive sound with our premium wireless headphones. Featuring advanced noise-canceling technology, up to 30 hours of battery life, and ultra-comfortable memory foam ear cushions. Perfect for travel, work, and relaxation.',
-        specs: [
-            { label: 'Brand', value: 'AudioTech' },
-            { label: 'Model', value: 'QuietPro X1' },
-            { label: 'Connectivity', value: 'Bluetooth 5.2' },
-            { label: 'Battery Life', value: 'Up to 30 hours' },
-            { label: 'Weight', value: '250g' }
-        ],
-        images: [
-            'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80',
-            'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800&q=80',
-            'https://images.unsplash.com/photo-1491927570842-0261e477d937?w=800&q=80',
-            'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&q=80'
-        ]
+        id: realProduct.id,
+        name: realProduct.name,
+        price: realProduct.price,
+        compareAtPrice: realProduct.originalPrice,
+        category: realProduct.category || realProduct.categorySlug,
+        status: realProduct.inStock !== false && realProduct.stock !== 0 ? 'Active' : 'Out of Stock',
+        stock: realProduct.stock || (realProduct.inStock ? 'Available' : 0),
+        description: realProduct.description || realProduct.shortDescription || 'No description available for this product.',
+        specs: realProduct.specifications ? Object.entries(realProduct.specifications).map(([key, value]) => ({ label: key, value })) : [],
+        images: realProduct.images && realProduct.images.length > 0 ? realProduct.images : ['https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWz9tftw9qculFG1sK91P-xQ-Wn3c_kI_39A'],
+        vendor: realProduct.brand || 'Chetak Plus',
+        tags: [realProduct.badge, ...(realProduct.perfectFor || [])].filter(Boolean).slice(0, 3).join(', ') || 'Standard'
     };
 
     return (
@@ -125,9 +124,9 @@ const AdminProductDetail = () => {
                             <div>
                                 <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1 block">Pricing</label>
                                 <div className="flex items-end gap-3">
-                                    <span className="text-3xl font-display font-bold text-foreground">${product.price}</span>
+                                    <span className="text-3xl font-sans font-bold text-foreground">₹{product.price}</span>
                                     {product.compareAtPrice && (
-                                        <span className="text-lg text-muted-foreground line-through mb-1">${product.compareAtPrice}</span>
+                                        <span className="text-lg text-muted-foreground line-through mb-1">₹{product.compareAtPrice}</span>
                                     )}
                                 </div>
                             </div>
@@ -153,11 +152,11 @@ const AdminProductDetail = () => {
                                 <div className="space-y-3 mt-2">
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="text-muted-foreground">Vendor</span>
-                                        <span className="font-medium">Chetak Plus</span>
+                                        <span className="font-medium text-right">{product.vendor}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="text-muted-foreground">Tags</span>
-                                        <span className="font-medium">Audio, Best Seller</span>
+                                        <span className="font-medium text-right max-w-[150px] truncate">{product.tags}</span>
                                     </div>
                                 </div>
                             </div>
