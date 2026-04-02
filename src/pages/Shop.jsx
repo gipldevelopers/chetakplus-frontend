@@ -3,27 +3,41 @@ import { useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, X } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ScrollReveal from "@/components/ui/ScrollReveal";
-import { products, categories } from "@/data/products";
+import { useData } from "@/context/DataContext";
 
 const sortOptions = [
-{ label: "Featured", value: "featured" },
-{ label: "Price: Low to High", value: "price-asc" },
-{ label: "Price: High to Low", value: "price-desc" },
-{ label: "Newest", value: "newest" }];
-
+  { label: "Featured", value: "featured" },
+  { label: "Price: Low to High", value: "price-asc" },
+  { label: "Price: High to Low", value: "price-desc" },
+  { label: "Newest", value: "newest" }
+];
 
 const Shop = () => {
+  const { products, categories, loading } = useData();
   const [searchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("featured");
   const [showFilters, setShowFilters] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 1000]);
 
-  // Read maxPrice from URL params (for "Shop by Budget" links)
+  const [activeFilter, setActiveFilter] = useState(null);
+
+  // Read URL params
   useEffect(() => {
+    setActiveFilter(searchParams.get("filter"));
+
+    const cat = searchParams.get("category");
+    if (cat) {
+      setSelectedCategory(cat);
+    } else {
+      setSelectedCategory("all");
+    }
+
     const maxPrice = searchParams.get("maxPrice");
     if (maxPrice) {
       setPriceRange([0, parseInt(maxPrice)]);
+    } else {
+      setPriceRange([0, 50000]); // Reset if no maxPrice to a high number
     }
   }, [searchParams]);
 
@@ -32,15 +46,26 @@ const Shop = () => {
     if (selectedCategory !== "all") {
       result = result.filter((p) => p.categorySlug === selectedCategory);
     }
+
+    if (activeFilter === "new") {
+      result = result.filter((p) => p.badge === "New Arrival");
+    } else if (activeFilter === "bestseller") {
+      result = result.filter((p) => p.badge === "Best Seller" || p.badge === "Popular" || p.reviewCount > 100);
+    }
+
     result = result.filter((p) => p.price >= priceRange[0] && p.price <= priceRange[1]);
     switch (sortBy) {
-      case "price-asc":result.sort((a, b) => a.price - b.price);break;
-      case "price-desc":result.sort((a, b) => b.price - a.price);break;
-
-      default:break;
+      case "price-asc": result.sort((a, b) => a.price - b.price); break;
+      case "price-desc": result.sort((a, b) => b.price - a.price); break;
+      case "newest": result.sort((a, b) => b.id - a.id); break;
+      default: break;
     }
     return result;
-  }, [selectedCategory, sortBy, priceRange]);
+  }, [selectedCategory, sortBy, priceRange, products, activeFilter]);
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading products...</div>;
+  }
 
   return (
     <div>
@@ -64,20 +89,18 @@ const Shop = () => {
               <div className="space-y-2">
                 <button
                   onClick={() => setSelectedCategory("all")}
-                  className={`block w-full text-left text-sm py-1.5 transition-colors ${
-                  selectedCategory === "all" ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"}`
+                  className={`block w-full text-left text-sm py-1.5 transition-colors ${selectedCategory === "all" ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"}`
                   }>
-                  
+
                   All Products
                 </button>
                 {categories.map((cat) =>
-                <button
-                  key={cat.slug}
-                  onClick={() => setSelectedCategory(cat.slug)}
-                  className={`block w-full text-left text-sm py-1.5 transition-colors ${
-                  selectedCategory === cat.slug ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"}`
-                  }>
-                  
+                  <button
+                    key={cat.slug}
+                    onClick={() => setSelectedCategory(cat.slug)}
+                    className={`block w-full text-left text-sm py-1.5 transition-colors ${selectedCategory === cat.slug ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"}`
+                    }>
+
                     {cat.name}
                   </button>
                 )}
@@ -92,7 +115,7 @@ const Shop = () => {
                   onChange={(e) => setPriceRange([+e.target.value, priceRange[1]])}
                   className="w-20 px-3 py-2 text-sm border border-border rounded-lg bg-background"
                   placeholder="Min" />
-                
+
                 <span className="text-muted-foreground">–</span>
                 <input
                   type="number"
@@ -100,7 +123,7 @@ const Shop = () => {
                   onChange={(e) => setPriceRange([priceRange[0], +e.target.value])}
                   className="w-20 px-3 py-2 text-sm border border-border rounded-lg bg-background"
                   placeholder="Max" />
-                
+
               </div>
             </div>
           </aside>
@@ -112,47 +135,45 @@ const Shop = () => {
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="lg:hidden flex items-center gap-2 text-sm font-medium text-foreground px-4 py-2 border border-border rounded-xl">
-                
+
                 <SlidersHorizontal size={16} /> Filters
               </button>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="max-w-[150px] sm:max-w-none text-sm border border-border rounded-xl px-4 py-2 bg-background text-foreground focus:outline-none">
-                
+
                 {sortOptions.map((opt) =>
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 )}
               </select>
             </div>
 
             {/* Mobile filters */}
             {showFilters &&
-            <div className="lg:hidden mb-6 p-4 border border-border rounded-xl bg-card space-y-4">
+              <div className="lg:hidden mb-6 p-4 border border-border rounded-xl bg-card space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-sm">Filters</h3>
                   <button onClick={() => setShowFilters(false)}><X size={16} /></button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
-                  onClick={() => setSelectedCategory("all")}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                  selectedCategory === "all" ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`
-                  }>
-                  
+                    onClick={() => setSelectedCategory("all")}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${selectedCategory === "all" ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`
+                    }>
+
                     All
                   </button>
                   {categories.map((cat) =>
-                <button
-                  key={cat.slug}
-                  onClick={() => setSelectedCategory(cat.slug)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                  selectedCategory === cat.slug ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`
-                  }>
-                  
+                    <button
+                      key={cat.slug}
+                      onClick={() => setSelectedCategory(cat.slug)}
+                      className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${selectedCategory === cat.slug ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`
+                      }>
+
                       {cat.name}
                     </button>
-                )}
+                  )}
                 </div>
               </div>
             }
@@ -160,14 +181,14 @@ const Shop = () => {
             {/* Product Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
               {filtered.map((product, i) =>
-              <ScrollReveal key={product.id} delay={i * 0.05}>
+                <ScrollReveal key={product.id} delay={i * 0.05}>
                   <ProductCard product={product} />
                 </ScrollReveal>
               )}
             </div>
 
             {filtered.length === 0 &&
-            <div className="text-center py-20">
+              <div className="text-center py-20">
                 <p className="text-muted-foreground">No products found. Try adjusting your filters.</p>
               </div>
             }
