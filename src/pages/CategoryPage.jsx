@@ -2,24 +2,30 @@ import { useParams, Link } from "react-router-dom";
 import { useState, useMemo } from "react";
 import ProductCard from "@/components/ProductCard";
 import ScrollReveal from "@/components/ui/ScrollReveal";
-import { categories, getProductsByCategory } from "@/data/products";
+import { useData } from "@/context/DataContext";
 
 const CategoryPage = () => {
   const { slug } = useParams();
+  const { categories, getProductsByCategory, loading } = useData();
   const category = categories.find((c) => c.slug === slug);
   const categoryProducts = getProductsByCategory(slug || "");
   const [sortBy, setSortBy] = useState("featured");
 
   const sorted = useMemo(() => {
+    if (!categoryProducts) return [];
     const result = [...categoryProducts];
     switch (sortBy) {
-      case "price-asc":result.sort((a, b) => a.price - b.price);break;
-      case "price-desc":result.sort((a, b) => b.price - a.price);break;
+      case "price-asc": result.sort((a, b) => a.price - b.price); break;
+      case "price-desc": result.sort((a, b) => b.price - a.price); break;
 
-      default:break;
+      default: break;
     }
     return result;
   }, [categoryProducts, sortBy]);
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   if (!category) {
     return (
@@ -53,7 +59,7 @@ const CategoryPage = () => {
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="max-w-[160px] text-sm border border-border rounded-xl px-3 py-2 bg-background text-foreground focus:outline-none">
-            
+
             <option value="featured">Featured</option>
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
@@ -62,13 +68,13 @@ const CategoryPage = () => {
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {sorted.map((product, i) =>
-          <ScrollReveal key={product.id} delay={i * 0.05}>
+            <ScrollReveal key={product.id} delay={i * 0.05}>
               <ProductCard product={product} />
             </ScrollReveal>
           )}
         </div>
         {sorted.length === 0 &&
-        <div className="text-center py-20 text-muted-foreground">No products in this category yet.</div>
+          <div className="text-center py-20 text-muted-foreground">No products in this category yet.</div>
         }
       </div>
     </div>);
