@@ -11,6 +11,7 @@ import CartDrawer from "@/components/layout/CartDrawer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import ScrollToTop from "@/components/ScrollToTop";
 import OfferPopup from "@/components/OfferPopup";
+import { DataProvider } from "@/context/DataContext";
 import Index from "./pages/Index";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
@@ -29,19 +30,28 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
 
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminAddProduct from "./pages/admin/AdminAddProduct";
+import AdminProductDetail from "./pages/admin/AdminProductDetail";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
   const location = useLocation();
-  const isAuthPage = ["/signin", "/signup", "/forgot-password"].includes(location.pathname);
+  const isAdmin = location.pathname.startsWith('/admin');
+  const isAuthPage = ["/signin", "/signup", "/forgot-password", "/admin/login"].includes(location.pathname);
+  const hideCustomerUI = isAuthPage || isAdmin;
 
   return (
     <>
       <ScrollToTop />
-      {!isAuthPage && <Navbar />}
-      {!isAuthPage && <CartDrawer />}
-      {!isAuthPage && <WhatsAppButton />}
-      {!isAuthPage && <OfferPopup />}
+      {!hideCustomerUI && <Navbar />}
+      {!hideCustomerUI && <CartDrawer />}
+      {!hideCustomerUI && <WhatsAppButton />}
+      {!hideCustomerUI && <OfferPopup />}
       <main className="min-h-screen">
         <Routes>
           <Route path="/" element={<Index />} />
@@ -62,24 +72,36 @@ const AppContent = () => {
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="categories" element={<AdminCategories />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="products/add" element={<AdminAddProduct />} />
+            <Route path="products/:id" element={<AdminProductDetail />} />
+          </Route>
+          <Route path="/admin/login" element={<AdminLogin />} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      {!isAuthPage && <Footer />}
+      {!hideCustomerUI && <Footer />}
     </>
   );
 };
 
 const App = () =>
-<QueryClientProvider client={queryClient}>
+  <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <CartProvider>
         <WishlistProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
+          <DataProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </DataProvider>
         </WishlistProvider>
       </CartProvider>
     </TooltipProvider>
