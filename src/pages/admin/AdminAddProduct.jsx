@@ -75,6 +75,7 @@ const AdminAddProduct = () => {
         description: '',
         features: [],
         perfectFor: [],
+        images: [],
         specifications: [{ key: '', value: '' }],
         variants: [{ label: '', options: [] }]
     });
@@ -156,8 +157,8 @@ const AdminAddProduct = () => {
                         return (
                             <div key={step.id} className="relative z-10 flex flex-col items-center gap-2 bg-white px-2">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${isActive ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-110' :
-                                        isCompleted ? 'bg-primary text-primary-foreground' :
-                                            'bg-secondary text-muted-foreground'
+                                    isCompleted ? 'bg-primary text-primary-foreground' :
+                                        'bg-secondary text-muted-foreground'
                                     }`}>
                                     {isCompleted ? <CheckCircle2 size={20} /> : step.id}
                                 </div>
@@ -269,13 +270,44 @@ const AdminAddProduct = () => {
                         <div className="space-y-8 animate-fade-in">
                             <div>
                                 <h2 className="text-xl font-sans font-semibold mb-4">Product Images</h2>
-                                <div className="border-2 border-dashed border-border rounded-3xl p-12 text-center hover:bg-gray-50/50 transition-colors cursor-pointer group">
+
+                                {formData.images && formData.images.length > 0 && (
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                                        {formData.images.map((img, idx) => (
+                                            <div key={idx} className="relative aspect-square rounded-2xl border border-border overflow-hidden group bg-gray-50 flex items-center justify-center">
+                                                <img src={URL.createObjectURL(img)} alt="Preview" className="w-full h-full object-cover" />
+                                                <button type="button" onClick={() => {
+                                                    const newImages = [...formData.images];
+                                                    newImages.splice(idx, 1);
+                                                    handleChange('images', newImages);
+                                                }} className="absolute top-2 right-2 bg-white/90 text-destructive p-1.5 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <label className="block border-2 border-dashed border-border rounded-3xl p-12 text-center hover:bg-gray-50/50 transition-colors cursor-pointer group relative">
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            if (e.target.files && e.target.files.length > 0) {
+                                                handleChange('images', [...(formData.images || []), ...Array.from(e.target.files)]);
+                                            }
+                                        }}
+                                    />
                                     <div className="w-20 h-20 rounded-full bg-primary/5 text-primary flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                                         <Upload size={32} />
                                     </div>
-                                    <h3 className="text-lg font-sans font-medium text-foreground mb-1">Click to upload image gallery</h3>
-                                    <p className="text-sm text-muted-foreground">Main image will be the first one listed.</p>
-                                </div>
+                                    <h3 className="text-lg font-sans font-medium text-foreground mb-1">
+                                        {formData.images && formData.images.length > 0 ? 'Upload more images' : 'Click to upload image gallery'}
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">Main image will be the first one listed. Upload multiple files at once.</p>
+                                </label>
                             </div>
 
                             <div className="space-y-4">
