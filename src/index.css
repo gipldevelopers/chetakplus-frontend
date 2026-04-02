@@ -6,25 +6,32 @@
 
 @layer base {
   :root {
-    --background: 40 20% 98%; /* Paper White / Soft Ivory */
-    --foreground: 220 20% 15%; /* Deep Charcoal Navy */
+    --background: 40 20% 98%;
+    /* Paper White / Soft Ivory */
+    --foreground: 220 20% 15%;
+    /* Deep Charcoal Navy */
 
-    --card: 0 0% 100%; /* Pure White */
+    --card: 0 0% 100%;
+    /* Pure White */
     --card-foreground: 220 20% 15%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 220 20% 15%;
 
-    --primary: 220 45% 25%; /* Deep Oxford Navy */
+    --primary: 220 45% 25%;
+    /* Deep Oxford Navy */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 40 15% 93%; /* Warm Beige / Cream */
+    --secondary: 40 15% 93%;
+    /* Warm Beige / Cream */
     --secondary-foreground: 220 20% 20%;
 
-    --muted: 220 15% 94%; /* Cool Light Grey */
+    --muted: 220 15% 94%;
+    /* Cool Light Grey */
     --muted-foreground: 220 15% 45%;
 
-    --accent: 150 25% 45%; /* Muted Sage Green */
+    --accent: 150 25% 45%;
+    /* Muted Sage Green */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 350 60% 50%;
@@ -93,8 +100,23 @@
     @apply bg-background text-foreground font-sans antialiased overflow-x-hidden;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-display;
+  }
+
+  .admin-panel h1,
+  .admin-panel h2,
+  .admin-panel h3,
+  .admin-panel h4,
+  .admin-panel h5,
+  .admin-panel h6,
+  .admin-panel .font-display {
+    @apply font-sans !important;
   }
 }
 
@@ -102,6 +124,7 @@
   .hover-lift {
     @apply transition-all duration-300 ease-out;
   }
+
   .hover-lift:hover {
     @apply -translate-y-1;
     box-shadow: 0 12px 32px -8px hsl(var(--foreground) / 0.08);
@@ -119,6 +142,7 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
@@ -222,6 +246,7 @@
   from {
     transform: scaleX(0);
   }
+
   to {
     transform: scaleX(1);
   }
@@ -233,9 +258,11 @@
     width: 36px;
     height: 36px;
   }
+
   .hero-carousel__arrow--left {
     left: 8px;
   }
+
   .hero-carousel__arrow--right {
     right: 8px;
   }
@@ -245,13 +272,16 @@
   .hero-carousel__arrow {
     display: none;
   }
+
   .hero-carousel__dots {
     bottom: 12px;
   }
+
   .hero-carousel__dot {
     width: 24px;
     height: 3px;
   }
+
   .hero-carousel__dot--active {
     width: 36px;
   }
