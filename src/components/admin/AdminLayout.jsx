@@ -1,153 +1,259 @@
-import React, { useState } from 'react';
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { useMemo, useState } from "react";
+import { Navigate, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-    LayoutDashboard,
-    Tags,
-    Package,
-    LogOut,
-    Menu,
-    Bell,
-    Search,
-    ChevronLeft
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+  Bell,
+  ChevronDown,
+  ChevronsLeft,
+  Contact,
+  CreditCard,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  MessageSquare,
+  Package,
+  Receipt,
+  Search,
+  Settings,
+  Sparkles,
+  Star,
+  Tags,
+  Users,
+  X,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { adminNotifications } from "@/data/adminMockData";
+import { clearAdminSession, isAdminAuthenticated } from "@/lib/adminAuth";
+import { cn } from "@/lib/utils";
+
+const navItems = [
+  { label: "Dashboard", to: "/admin", icon: LayoutDashboard, exact: true },
+  { label: "Hero Section", to: "/admin/hero", icon: Sparkles },
+  { label: "Categories", to: "/admin/categories", icon: Tags },
+  { label: "Products", to: "/admin/products", icon: Package },
+  { label: "Orders", to: "/admin/orders", icon: Receipt },
+  { label: "Customers", to: "/admin/customers", icon: Users },
+  { label: "Reviews", to: "/admin/reviews", icon: Star },
+  { label: "Payments", to: "/admin/payments", icon: CreditCard },
+  { label: "Contacts", to: "/admin/contacts", icon: Contact },
+  { label: "Settings", to: "/admin/settings", icon: Settings },
+];
 
 const AdminLayout = () => {
-    const [isCollapsed, setIsCollapsed] = useState(false);
-    const navigate = useNavigate();
-    const location = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-    const handleLogout = () => {
-        // mock logout
-        navigate('/admin/login');
-    };
+  const authenticated = isAdminAuthenticated();
 
-    const navItems = [
-        { name: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
-        { name: 'Categories', icon: Tags, path: '/admin/categories' },
-        { name: 'Products', icon: Package, path: '/admin/products' },
-    ];
-
-    return (
-        <div className="admin-panel min-h-screen bg-gray-50/50 flex">
-            {/* Sidebar */}
-            <aside
-                className={`${isCollapsed ? 'w-20' : 'w-64'
-                    } bg-white border-r border-border transition-all duration-300 ease-in-out flex flex-col sticky top-0 h-screen z-40 shadow-[4px_0_24px_rgba(0,0,0,0.02)]`}
-            >
-                <div className="h-16 flex items-center justify-between px-4 border-b border-border">
-                    {!isCollapsed && (
-                        <span className="text-xl font-display font-semibold tracking-tight text-primary">Chetak Plus</span>
-                    )}
-                    {isCollapsed && (
-                        <span className="text-xl font-display font-bold text-primary mx-auto">CP</span>
-                    )}
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setIsCollapsed(!isCollapsed)}
-                        className={`h-8 w-8 text-muted-foreground hover:text-foreground ${isCollapsed ? 'hidden' : ''}`}
-                    >
-                        <ChevronLeft size={18} />
-                    </Button>
-                </div>
-
-                <nav className="flex-1 py-6 flex flex-col gap-2 px-3">
-                    {navItems.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = location.pathname === item.path ||
-                            (item.path !== '/admin' && location.pathname.startsWith(item.path));
-                        return (
-                            <NavLink
-                                key={item.name}
-                                to={item.path}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${isActive
-                                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-                                    : 'text-muted-foreground hover:bg-secondary/80 hover:text-foreground'
-                                    }`}
-                            >
-                                <Icon size={20} className={isActive ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-foreground'} />
-                                {!isCollapsed && <span className="font-medium text-sm">{item.name}</span>}
-                            </NavLink>
-                        );
-                    })}
-                </nav>
-
-                <div className="p-4 border-t border-border">
-                    <button
-                        onClick={handleLogout}
-                        className={`flex items-center gap-3 px-3 py-2.5 w-full rounded-xl transition-colors text-destructive hover:bg-destructive/10 ${isCollapsed ? 'justify-center' : ''
-                            }`}
-                    >
-                        <LogOut size={20} />
-                        {!isCollapsed && <span className="font-medium text-sm">Logout</span>}
-                    </button>
-                </div>
-            </aside>
-
-            {/* Main Content */}
-            <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                {/* Top Header */}
-                <header className="h-16 bg-white/80 backdrop-blur-md border-b border-border sticky top-0 z-30 flex items-center justify-between px-6 shadow-sm">
-                    <div className="flex items-center gap-4 flex-1">
-                        {isCollapsed && (
-                            <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(false)} className="md:hidden">
-                                <Menu size={20} />
-                            </Button>
-                        )}
-                        <div className="relative w-full max-w-md hidden sm:block">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                            <Input
-                                placeholder="Search everywhere..."
-                                className="pl-10 bg-gray-50/50 border-gray-200 focus-visible:ring-primary/20 h-10 rounded-full"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground hidden sm:flex">
-                            <Bell size={20} />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full border-2 border-white"></span>
-                        </Button>
-
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                                    <Avatar className="h-10 w-10 border border-gray-100 shadow-sm">
-                                        <AvatarImage src="https://i.pravatar.cc/150?u=admin" alt="Admin" />
-                                        <AvatarFallback className="bg-primary/10 text-primary">AD</AvatarFallback>
-                                    </Avatar>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56" align="end" forceMount>
-                                <DropdownMenuLabel className="font-normal">
-                                    <div className="flex flex-col space-y-1">
-                                        <p className="text-sm font-medium leading-none">Admin User</p>
-                                        <p className="text-xs leading-none text-muted-foreground">admin@chetakplus.com</p>
-                                    </div>
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer">
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Log out</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </header>
-
-                {/* Page Content */}
-                <div className="flex-1 overflow-auto p-6 lg:p-8 animate-fade-in scrollbar-hide">
-                    <div className="max-w-7xl mx-auto w-full">
-                        <Outlet />
-                    </div>
-                </div>
-            </main>
-        </div>
+  const pageTitle = useMemo(() => {
+    if (location.pathname === "/admin") return "Dashboard";
+    const current = navItems.find((item) =>
+      item.exact ? location.pathname === item.to : location.pathname.startsWith(item.to),
     );
+    return current?.label || "Admin Panel";
+  }, [location.pathname]);
+
+  const handleLogout = () => {
+    clearAdminSession();
+    navigate("/admin/login");
+  };
+
+  if (!authenticated) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  return (
+    <div className="admin-shell admin-panel h-screen overflow-hidden">
+      <div className="flex h-full text-slate-800">
+        <aside
+          className={cn(
+            "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-white/15 bg-primary text-primary-foreground shadow-2xl shadow-primary/25 transition-all duration-300",
+            isSidebarCollapsed ? "w-[88px]" : "w-[280px]",
+            isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          )}
+        >
+          <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="flex h-11 shrink-0 items-center">
+                <img src="/logo.jpg" alt="Chetak Plus" className="h-full w-auto object-contain rounded-lg shadow-lg shadow-black/10" />
+              </div>
+              {!isSidebarCollapsed ? (
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-white">Chetak Plus</p>
+                  <p className="truncate text-[10px] font-bold uppercase tracking-[0.1em] text-white/50">Admin</p>
+                </div>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 lg:hidden"
+              onClick={() => setIsMobileSidebarOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              className="hidden h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 lg:inline-flex"
+              onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+            >
+              <ChevronsLeft className={cn("h-4 w-4 transition", isSidebarCollapsed && "rotate-180")} />
+            </button>
+          </div>
+
+          <div className="admin-sidebar-scroll flex-1 overflow-y-auto px-3 py-5">
+            <nav className="space-y-1.5">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = item.exact ? location.pathname === item.to : location.pathname.startsWith(item.to);
+
+                return (
+                  <NavLink
+                    key={item.label}
+                    to={item.to}
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                    className={cn(
+                      "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
+                      isActive
+                        ? "bg-white text-slate-900 shadow-[0_8px_20px_rgba(15,23,42,0.25)]"
+                        : "text-white/78 hover:bg-white/12 hover:text-white",
+                      isSidebarCollapsed && "justify-center px-2",
+                    )}
+                  >
+                    <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-slate-900" : "text-white/65 group-hover:text-white")} />
+                    {!isSidebarCollapsed ? <span>{item.label}</span> : null}
+                  </NavLink>
+                );
+              })}
+            </nav>
+          </div>
+
+          <div className="border-t border-white/10 p-3">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-300 transition hover:bg-rose-500/15 hover:text-rose-100",
+                isSidebarCollapsed && "justify-center px-2",
+              )}
+            >
+              <LogOut className="h-4 w-4" />
+              {!isSidebarCollapsed ? <span>Logout</span> : null}
+            </button>
+          </div>
+        </aside>
+
+        {isMobileSidebarOpen ? (
+          <button
+            type="button"
+            className="fixed inset-0 z-40 bg-slate-900/50 lg:hidden"
+            onClick={() => setIsMobileSidebarOpen(false)}
+            aria-label="Close sidebar"
+          />
+        ) : null}
+
+        <div className={cn(
+          "flex min-w-0 flex-1 flex-col overflow-hidden transition-all duration-300",
+          isSidebarCollapsed ? "lg:ml-[88px]" : "lg:ml-[280px]"
+        )}>
+          <header className="z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur">
+            <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6">
+              <div className="flex min-w-0 items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 rounded-xl lg:hidden"
+                  onClick={() => setIsMobileSidebarOpen(true)}
+                >
+                  <Menu className="h-4 w-4" />
+                </Button>
+                <div className="hidden min-w-0 sm:block">
+                  <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Admin Workspace</p>
+                  <p className="truncate text-sm font-semibold text-slate-900">{pageTitle}</p>
+                </div>
+              </div>
+
+              <div className="hidden max-w-md flex-1 md:block">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Input placeholder="Search products, orders, customers..." className="h-10 rounded-xl border-slate-200 bg-slate-50 pl-10" />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-3">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon" className="relative h-9 w-9 rounded-xl border-slate-200">
+                      <Bell className="h-4 w-4" />
+                      <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-80 rounded-xl border-slate-200">
+                    <DropdownMenuLabel className="text-xs uppercase tracking-[0.16em] text-slate-400">Notifications</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {adminNotifications.map((notification) => (
+                      <DropdownMenuItem key={notification.id} className="flex cursor-pointer flex-col items-start gap-1 py-3">
+                        <p className="text-sm font-medium text-slate-700">{notification.title}</p>
+                        <p className="text-xs text-slate-500">{notification.time}</p>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 transition hover:bg-slate-50"
+                    >
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-slate-900 text-xs text-white">AU</AvatarFallback>
+                      </Avatar>
+                      <div className="hidden text-left sm:block">
+                        <p className="text-xs font-semibold text-slate-800">Admin User</p>
+                        <p className="text-[11px] text-slate-500">Super Admin</p>
+                      </div>
+                      <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52 rounded-xl border-slate-200">
+                    <DropdownMenuLabel>
+                      <p className="text-sm font-medium text-slate-800">admin@chetakplus.com</p>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate("/admin/settings")} className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-rose-600 focus:text-rose-600">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </header>
+
+          <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-7">
+            <div className="mx-auto w-full max-w-[1320px]">
+              <Outlet />
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default AdminLayout;
