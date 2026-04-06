@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { adminNotifications } from "@/data/adminMockData";
-import { clearAdminSession, isAdminAuthenticated } from "@/lib/adminAuth";
+import { clearAdminSession, getAdminSession, isAdminAuthenticated } from "@/lib/adminAuth";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -55,6 +55,9 @@ const AdminLayout = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const authenticated = isAdminAuthenticated();
+  const adminSession = getAdminSession();
+  const adminName = adminSession?.admin?.name || "Admin User";
+  const adminEmail = adminSession?.admin?.email || "admin@chetakplus.com";
 
   const pageTitle = useMemo(() => {
     if (location.pathname === "/admin") return "Dashboard";
@@ -217,10 +220,17 @@ const AdminLayout = () => {
                       className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 transition hover:bg-slate-50"
                     >
                       <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-slate-900 text-xs text-white">AU</AvatarFallback>
+                        <AvatarFallback className="bg-slate-900 text-xs text-white">
+                          {adminName
+                            .split(" ")
+                            .map((token) => token[0])
+                            .join("")
+                            .slice(0, 2)
+                            .toUpperCase() || "AU"}
+                        </AvatarFallback>
                       </Avatar>
                       <div className="hidden text-left sm:block">
-                        <p className="text-xs font-semibold text-slate-800">Admin User</p>
+                        <p className="text-xs font-semibold text-slate-800">{adminName}</p>
                         <p className="text-[11px] text-slate-500">Super Admin</p>
                       </div>
                       <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
@@ -228,7 +238,7 @@ const AdminLayout = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-52 rounded-xl border-slate-200">
                     <DropdownMenuLabel>
-                      <p className="text-sm font-medium text-slate-800">admin@chetakplus.com</p>
+                      <p className="text-sm font-medium text-slate-800">{adminEmail}</p>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => navigate("/admin/settings")} className="cursor-pointer">
