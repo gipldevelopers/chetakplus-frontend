@@ -2,14 +2,20 @@ import { useState } from "react";
 import { Phone, Mail, MapPin, Send } from "lucide-react";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { toast } from "sonner";
+import api from "@/api";
 
 const Contact = () => {
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    toast.success("Thank you! We'll get back to you within 24 hours.");
-    setForm({ name: "", email: "", subject: "", message: "" });
+    try {
+      await api.submitContact(form);
+      toast.success("Thank you! We'll get back to you within 24 hours.");
+      setForm({ name: "", email: "", subject: "", message: "" });
+    } catch (error) {
+      toast.error(error?.message || "Unable to send message right now. Please try again.");
+    }
   };
 
   return (
