@@ -127,9 +127,9 @@ const HeroCarousel = () => {
       className={`hero-carousel relative overflow-hidden transition-all duration-700 ease-in-out ${slide.bgClass}`}
     >
       {/* Background gradient accent tied to slide */}
-      <div 
-        className="hero-carousel__bg-accent opacity-10 transition-all duration-1000" 
-        style={{ 
+      <div
+        className="hero-carousel__bg-accent opacity-10 transition-all duration-1000"
+        style={{
           background: `radial-gradient(ellipse 60% 80% at 80% 40%, ${slide.id === 1 ? '#0f172a' : slide.id === 2 ? '#065f46' : '#991b1b'}33, transparent)`
         }}
       />
