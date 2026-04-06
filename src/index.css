@@ -114,9 +114,26 @@
   .admin-panel h3,
   .admin-panel h4,
   .admin-panel h5,
-  .admin-panel h6,
+  .admin-panel h6 {
+    font-family: "Playfair Display", Georgia, serif;
+  }
+
+  .admin-panel p,
+  .admin-panel span,
+  .admin-panel label,
+  .admin-panel button,
+  .admin-panel input,
+  .admin-panel textarea,
+  .admin-panel select {
+    font-family: "DM Sans", system-ui, sans-serif;
+  }
+
   .admin-panel .font-display {
-    @apply font-sans !important;
+    font-family: "Playfair Display", Georgia, serif !important;
+  }
+
+  .admin-panel .font-sans {
+    font-family: "DM Sans", system-ui, sans-serif !important;
   }
 }
 
@@ -285,4 +302,120 @@
   .hero-carousel__dot--active {
     width: 36px;
   }
+}
+
+/* Admin styles */
+.admin-shell {
+  background:
+    radial-gradient(circle at 0% 0%, hsl(var(--primary) / 0.14), transparent 34%),
+    radial-gradient(circle at 100% 0%, hsl(var(--accent) / 0.1), transparent 30%),
+    linear-gradient(180deg, hsl(var(--background)), hsl(var(--secondary) / 0.45));
+}
+
+.admin-sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+}
+
+.admin-sidebar-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.admin-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-sidebar-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.5);
+}
+
+.admin-table thead th {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: rgb(100 116 139);
+}
+
+.admin-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.admin-table tbody tr:hover {
+  background: hsl(var(--secondary) / 0.55);
+}
+
+/* Make existing admin utilities match storefront palette */
+.admin-panel .text-slate-900 {
+  color: hsl(var(--foreground)) !important;
+}
+
+.admin-panel .text-slate-800,
+.admin-panel .text-slate-700 {
+  color: hsl(var(--foreground) / 0.88) !important;
+}
+
+.admin-panel .text-slate-600,
+.admin-panel .text-slate-500 {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.admin-panel .text-slate-400 {
+  color: hsl(var(--muted-foreground) / 0.85) !important;
+}
+
+.admin-panel .text-slate-300 {
+  color: hsl(var(--secondary-foreground) / 0.75) !important;
+}
+
+.admin-panel .text-slate-200 {
+  color: hsl(var(--secondary-foreground) / 0.95) !important;
+}
+
+.admin-panel .bg-slate-50,
+.admin-panel .bg-slate-50\/80 {
+  background-color: hsl(var(--secondary) / 0.65) !important;
+}
+
+.admin-panel .bg-slate-100 {
+  background-color: hsl(var(--muted)) !important;
+}
+
+.admin-panel .bg-slate-900 {
+  background-color: hsl(var(--primary)) !important;
+}
+
+.admin-panel .bg-slate-950\/95 {
+  background-color: hsl(var(--primary) / 0.98) !important;
+}
+
+.admin-panel .bg-slate-900\/50 {
+  background-color: hsl(var(--foreground) / 0.45) !important;
+}
+
+.admin-panel .border-slate-200,
+.admin-panel .divide-slate-200> :not([hidden])~ :not([hidden]) {
+  border-color: hsl(var(--border)) !important;
+}
+
+.admin-panel .border-slate-200\/80 {
+  border-color: hsl(var(--border) / 0.8) !important;
+}
+
+.admin-panel .border-slate-300 {
+  border-color: hsl(var(--input)) !important;
+}
+
+.admin-panel .hover\:bg-slate-100:hover,
+.admin-panel .hover\:bg-slate-50:hover {
+  background-color: hsl(var(--secondary)) !important;
+}
+
+.admin-panel .hover\:bg-slate-800:hover {
+  background-color: hsl(var(--primary) / 0.9) !important;
+}
+
+.admin-panel .hover\:text-slate-700:hover,
+.admin-panel .hover\:text-slate-900:hover {
+  color: hsl(var(--foreground)) !important;
 }
