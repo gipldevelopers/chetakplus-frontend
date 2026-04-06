@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -196,13 +196,12 @@ const AdminHeroForm = () => {
             {formData.image ? <img src={formData.image} alt="Hero preview" className="h-64 w-full object-cover" /> : <div className="h-64 bg-slate-100" />}
             {formData.overlay ? <div className="absolute inset-0 bg-slate-900/45" /> : null}
             <div
-              className={`absolute inset-0 flex p-6 text-white ${
-                formData.alignment === "center"
+              className={`absolute inset-0 flex p-6 text-white ${formData.alignment === "center"
                   ? "items-center justify-center text-center"
                   : formData.alignment === "right"
                     ? "items-center justify-end text-right"
                     : "items-center justify-start text-left"
-              }`}
+                }`}
             >
               <div className="max-w-xs space-y-2">
                 <p className="text-lg font-semibold">{formData.title || "Hero title"}</p>
