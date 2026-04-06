@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { isAdminAuthenticated, setAdminSession } from "@/lib/adminAuth";
+import api from "@/api";
 
 const defaultForm = {
   email: "",
@@ -44,7 +45,7 @@ const AdminLogin = () => {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setAuthError("");
 
@@ -53,20 +54,23 @@ const AdminLogin = () => {
     }
 
     setIsLoading(true);
+    try {
+      const response = await api.adminLogin({
+        email: formValues.email,
+        password: formValues.password,
+      });
 
-    setTimeout(() => {
-      const validEmail = "admin@chetakplus.com";
-      const validPassword = "password123";
+      setAdminSession({
+        token: response?.token,
+        admin: response?.admin,
+      });
 
-      if (formValues.email === validEmail && formValues.password === validPassword) {
-        setAdminSession();
-        navigate("/admin", { replace: true });
-      } else {
-        setAuthError("Invalid credentials. Use admin@chetakplus.com / password123 for demo access.");
-      }
-
+      navigate("/admin", { replace: true });
+    } catch (error) {
+      setAuthError(error?.message || "Unable to sign in. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 900);
+    }
   };
 
   return (
@@ -152,7 +156,7 @@ const AdminLogin = () => {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-slate-500">Demo credentials are shown in the validation message on failed login.</p>
+        <p className="mt-6 text-center text-xs text-slate-500">Admin credentials are managed from backend `install.php`.</p>
       </div>
     </div>
   );
