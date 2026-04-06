@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { products as staticProducts, categories as staticCategories } from "@/data/products";
+import api from "@/api";
 
 const DataContext = createContext();
 
@@ -12,17 +13,10 @@ export const DataProvider = ({ children }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [prodRes, catRes] = await Promise.all([
-                    fetch("/backend/api/products.php"),
-                    fetch("/backend/api/categories.php")
+                const [backendProducts, backendCategories] = await Promise.all([
+                    api.getProducts(),
+                    api.getCategories()
                 ]);
-
-                if (!prodRes.ok || !catRes.ok) {
-                    throw new Error("Failed to fetch data from API");
-                }
-
-                const backendProducts = await prodRes.json();
-                const backendCategories = await catRes.json();
 
                 // If backend has items, combine them with static if desired, 
                 // or just replace them. To show "real-time" backend data, 
