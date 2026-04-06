@@ -33,10 +33,23 @@ import ForgotPassword from "./pages/ForgotPassword";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminHeroList from "./pages/admin/AdminHeroList";
+import AdminHeroForm from "./pages/admin/AdminHeroForm";
 import AdminCategories from "./pages/admin/AdminCategories";
+import AdminCategoryForm from "./pages/admin/AdminCategoryForm";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminAddProduct from "./pages/admin/AdminAddProduct";
 import AdminProductDetail from "./pages/admin/AdminProductDetail";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
+import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminCustomerDetail from "./pages/admin/AdminCustomerDetail";
+import AdminReviews from "./pages/admin/AdminReviews";
+import AdminPayments from "./pages/admin/AdminPayments";
+import AdminPaymentDetail from "./pages/admin/AdminPaymentDetail";
+import AdminContacts from "./pages/admin/AdminContacts";
+import AdminContactDetail from "./pages/admin/AdminContactDetail";
+import AdminSettings from "./pages/admin/AdminSettings";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
@@ -75,10 +88,26 @@ const AppContent = () => {
 
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
+            <Route path="hero" element={<AdminHeroList />} />
+            <Route path="hero/new" element={<AdminHeroForm />} />
+            <Route path="hero/:heroId/edit" element={<AdminHeroForm />} />
             <Route path="categories" element={<AdminCategories />} />
+            <Route path="categories/new" element={<AdminCategoryForm />} />
+            <Route path="categories/:categoryId/edit" element={<AdminCategoryForm />} />
             <Route path="products" element={<AdminProducts />} />
+            <Route path="products/new" element={<AdminAddProduct />} />
             <Route path="products/add" element={<AdminAddProduct />} />
             <Route path="products/:id" element={<AdminProductDetail />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="orders/:orderId" element={<AdminOrderDetail />} />
+            <Route path="customers" element={<AdminCustomers />} />
+            <Route path="customers/:customerId" element={<AdminCustomerDetail />} />
+            <Route path="reviews" element={<AdminReviews />} />
+            <Route path="payments" element={<AdminPayments />} />
+            <Route path="payments/:paymentId" element={<AdminPaymentDetail />} />
+            <Route path="contacts" element={<AdminContacts />} />
+            <Route path="contacts/:contactId" element={<AdminContactDetail />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
           <Route path="/admin/login" element={<AdminLogin />} />
 
