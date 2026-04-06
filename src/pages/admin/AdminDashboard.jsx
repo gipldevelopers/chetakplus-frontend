@@ -1,172 +1,187 @@
-import React from 'react';
+import { Link } from "react-router-dom";
+import { BarChart3, DollarSign, ShoppingCart, Users, ArrowRight } from "lucide-react";
 import {
-    Users,
-    ShoppingBag,
-    DollarSign,
-    Activity,
-    ArrowUpRight,
-    TrendingUp,
-    Package
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useData } from '@/context/DataContext';
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  adminSummary,
+  categoryPerformance,
+  dashboardSeries,
+  ordersData,
+  formatCurrency,
+} from "@/data/adminMockData";
+import { MetricCard, PageHeader, Panel, StatusBadge } from "@/components/admin/AdminUi";
+
+const metricConfig = [
+  {
+    title: "Total Sales",
+    value: adminSummary.totalSales,
+    trend: "up 14.3% vs last month",
+    icon: ShoppingCart,
+    gradient: "bg-gradient-to-br from-sky-500 to-indigo-500",
+  },
+  {
+    title: "Orders",
+    value: adminSummary.totalOrders,
+    trend: "up 8.9% vs last month",
+    icon: BarChart3,
+    gradient: "bg-gradient-to-br from-emerald-500 to-cyan-500",
+  },
+  {
+    title: "Customers",
+    value: adminSummary.totalCustomers,
+    trend: "up 11.2% vs last month",
+    icon: Users,
+    gradient: "bg-gradient-to-br from-amber-500 to-orange-500",
+  },
+  {
+    title: "Revenue",
+    value: adminSummary.revenue,
+    trend: "up 17.4% vs last month",
+    icon: DollarSign,
+    gradient: "bg-gradient-to-br from-indigo-500 to-violet-500",
+  },
+];
+
+const pieColors = ["#1d4ed8", "#0f766e", "#7c3aed", "#f97316"];
 
 const AdminDashboard = () => {
-    const { products, categories, loading } = useData();
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Dashboard"
+        description="A high-level view of revenue, orders, customer health, and operations activity."
+      />
 
-    const statCards = [
-        {
-            title: 'Total Revenue',
-            value: '₹3,45,231',
-            trend: '+20.1% from last month',
-            icon: DollarSign,
-            color: 'text-amber-500',
-            bg: 'bg-amber-500/10'
-        },
-        {
-            title: 'Active Categories',
-            value: categories ? categories.length.toString() : '0',
-            trend: 'Recently updated',
-            icon: Users,
-            color: 'text-blue-500',
-            bg: 'bg-blue-500/10'
-        },
-        {
-            title: 'Total Sales',
-            value: '+1,234',
-            trend: '+19% from last month',
-            icon: ShoppingBag,
-            color: 'text-purple-500',
-            bg: 'bg-purple-500/10'
-        },
-        {
-            title: 'Active Products',
-            value: products ? products.length.toString() : '0',
-            trend: 'Live on website',
-            icon: Package,
-            color: 'text-emerald-500',
-            bg: 'bg-emerald-500/10'
-        }
-    ];
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {metricConfig.map((item) => (
+          <MetricCard key={item.title} {...item} />
+        ))}
+      </section>
 
-    const recentOrders = [
-        { id: 'ORD-001', customer: 'Liam Johnson', total: '₹2,500', status: 'Completed', date: 'Today, 10:20 AM' },
-        { id: 'ORD-002', customer: 'Olivia Smith', total: '₹1,450', status: 'Processing', date: 'Today, 09:12 AM' },
-        { id: 'ORD-003', customer: 'Noah Williams', total: '₹850', status: 'Completed', date: 'Yesterday, 04:30 PM' },
-        { id: 'ORD-004', customer: 'Emma Brown', total: '₹3,200', status: 'Pending', date: 'Yesterday, 02:15 PM' },
-        { id: 'ORD-005', customer: 'Ava Jones', total: '₹1,999', status: 'Completed', date: 'Oct 24, 11:00 AM' },
-    ];
-
-    if (loading) {
-        return <div className="p-8 text-center animate-pulse text-muted-foreground">Loading dashboard data...</div>;
-    }
-
-    return (
-        <div className="space-y-8 animate-fade-in">
+      <section className="grid gap-5 xl:grid-cols-[1.7fr_1fr]">
+        <Panel className="p-5">
+          <div className="mb-4 flex items-center justify-between">
             <div>
-                <h1 className="text-3xl font-display font-bold text-foreground">Dashboard Overview</h1>
-                <p className="text-muted-foreground mt-1 text-sm">Here's what's happening in your store today.</p>
+              <h2 className="text-base font-semibold text-slate-900">Sales and Order Trend</h2>
+              <p className="text-sm text-slate-500">Static analytics preview for the last 6 months.</p>
             </div>
+          </div>
+          <div className="h-[290px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={dashboardSeries}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                <Tooltip />
+                <Line type="monotone" dataKey="sales" stroke="#1d4ed8" strokeWidth={2.5} dot={false} />
+                <Line type="monotone" dataKey="orders" stroke="#0f766e" strokeWidth={2.5} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Panel>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {statCards.map((stat, i) => {
-                    const Icon = stat.icon;
-                    return (
-                        <Card key={i} className="border-none shadow-sm bg-white overflow-hidden group hover-lift">
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className={`w-12 h-12 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center transition-transform group-hover:scale-110`}>
-                                        <Icon size={24} />
-                                    </div>
-                                    <TrendingUp className="text-muted-foreground w-4 h-4" />
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                                    <h3 className="text-2xl font-bold tracking-tight text-foreground">{stat.value}</h3>
-                                    <p className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
-                                        <ArrowUpRight className="w-3 h-3 text-emerald-500" />
-                                        {stat.trend}
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    );
-                })}
+        <Panel className="p-5">
+          <h2 className="text-base font-semibold text-slate-900">Revenue Share by Category</h2>
+          <p className="mb-4 text-sm text-slate-500">Distribution snapshot by key category segments.</p>
+          <div className="h-[230px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={categoryPerformance} dataKey="value" nameKey="name" innerRadius={58} outerRadius={84} paddingAngle={3}>
+                  {categoryPerformance.map((entry, index) => (
+                    <Cell key={entry.name} fill={pieColors[index % pieColors.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {categoryPerformance.map((segment, index) => (
+              <div key={segment.name} className="flex items-center gap-2 rounded-lg border border-slate-200 px-2.5 py-2 text-xs">
+                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: pieColors[index % pieColors.length] }} />
+                <span className="font-medium text-slate-700">{segment.name}</span>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </section>
+
+      <section className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
+        <Panel className="overflow-hidden">
+          <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">Recent Orders</h2>
+              <p className="text-sm text-slate-500">Latest transactions coming through the storefront.</p>
             </div>
+            <Link
+              to="/admin/orders"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-900 transition-colors"
+            >
+              View All
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <Table className="admin-table">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Order ID</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Payment</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {ordersData.slice(0, 3).map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell className="font-semibold text-slate-800">{order.id}</TableCell>
+                  <TableCell>{order.customerName}</TableCell>
+                  <TableCell>{formatCurrency(order.total)}</TableCell>
+                  <TableCell>
+                    <StatusBadge value={order.status} />
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge value={order.paymentStatus} />
+                  </TableCell>
+                  <TableCell className="text-slate-500">{order.date}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Panel>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-                <Card className="lg:col-span-4 border-none shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="font-display">Recent Orders</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-6">
-                            {recentOrders.map((order, i) => (
-                                <div key={i} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center font-bold text-xs text-foreground tracking-wider">
-                                            {order.customer.split(' ').map(n => n[0]).join('')}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-foreground leading-none mb-1">{order.customer}</p>
-                                            <p className="text-xs text-muted-foreground font-mono">{order.id} &bull; {order.date}</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right flex flex-col items-end gap-1.5">
-                                        <p className="text-sm font-semibold">{order.total}</p>
-                                        <span className={`text-[10px] uppercase tracking-wide font-bold px-2.5 py-0.5 rounded-full ${order.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
-                                                order.status === 'Processing' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
-                                                    'bg-orange-50 text-orange-600 border border-orange-100'
-                                            }`}>
-                                            {order.status}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="lg:col-span-3 border-none shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="font-display">System Status</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-8">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
-                                <Activity size={24} />
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-semibold text-foreground">API Connection Active</h4>
-                                <p className="text-xs text-muted-foreground mt-0.5">Fetching from PHP backend correctly</p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-5 mt-2">
-                            <div>
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm font-medium">Storage</span>
-                                    <span className="text-sm text-muted-foreground">65% used</span>
-                                </div>
-                                <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-                                    <div className="h-full bg-primary w-[65%] rounded-full" />
-                                </div>
-                            </div>
-                            <div>
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm font-medium">Server Load</span>
-                                    <span className="text-sm text-muted-foreground">32% load</span>
-                                </div>
-                                <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-                                    <div className="h-full bg-emerald-500 w-[32%] rounded-full" />
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
-    );
+        <Panel className="p-5">
+          <h2 className="text-base font-semibold text-slate-900">Order Volume Bars</h2>
+          <p className="mb-4 text-sm text-slate-500">Quick monthly volume check.</p>
+          <div className="h-[260px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dashboardSeries}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                <Tooltip />
+                <Bar dataKey="orders" fill="#1e293b" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Panel>
+      </section>
+    </div>
+  );
 };
 
 export default AdminDashboard;
