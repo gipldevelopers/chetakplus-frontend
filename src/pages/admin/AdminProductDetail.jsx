@@ -1,176 +1,101 @@
-import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useData } from '@/context/DataContext';
-import { ArrowLeft, Edit2, Info, LayoutList, PackageOpen, MoreHorizontal } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+﻿import { useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { getProductById, formatCurrency } from "@/data/adminMockData";
+import { PageHeader, Panel, StatLabel, StatusBadge } from "@/components/admin/AdminUi";
 
 const AdminProductDetail = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const { id } = useParams();
 
-    const { products } = useData();
+  const product = useMemo(() => getProductById(id), [id]);
+  const [activeImage, setActiveImage] = useState(product?.images?.[0] || "");
 
-    const realProduct = products?.find(p => p.id.toString() === id || p.slug === id);
-
-    if (!realProduct) {
-        return <div className="p-12 text-center text-muted-foreground animate-pulse font-medium">Loading or Product not found...</div>;
-    }
-
-    const product = {
-        id: realProduct.id,
-        name: realProduct.name,
-        price: realProduct.price,
-        compareAtPrice: realProduct.originalPrice,
-        category: realProduct.category || realProduct.categorySlug,
-        status: realProduct.inStock !== false && realProduct.stock !== 0 ? 'Active' : 'Out of Stock',
-        stock: realProduct.stock || (realProduct.inStock ? 'Available' : 0),
-        description: realProduct.description || realProduct.shortDescription || 'No description available for this product.',
-        specs: realProduct.specifications ? Object.entries(realProduct.specifications).map(([key, value]) => ({ label: key, value })) : [],
-        images: realProduct.images && realProduct.images.length > 0 ? realProduct.images : ['https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWz9tftw9qculFG1sK91P-xQ-Wn3c_kI_39A'],
-        vendor: realProduct.brand || 'Chetak Plus',
-        tags: [realProduct.badge, ...(realProduct.perfectFor || [])].filter(Boolean).slice(0, 3).join(', ') || 'Standard'
-    };
-
+  if (!product) {
     return (
-        <div className="space-y-6 animate-fade-in pb-12 w-full">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
-                <div className="flex items-center gap-4">
-                    <Button variant="outline" size="icon" onClick={() => navigate('/admin/products')} className="rounded-xl h-10 w-10 shrink-0">
-                        <ArrowLeft size={18} />
-                    </Button>
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground line-clamp-1">{product.name}</h1>
-                            <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-200 uppercase tracking-wider text-[10px] hidden sm:flex">
-                                {product.status}
-                            </Badge>
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-sm font-mono">{product.id}</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-3">
-                    <Button variant="outline" className="rounded-xl h-11 hidden sm:flex">
-                        <MoreHorizontal className="mr-2 h-4 w-4" /> More
-                    </Button>
-                    <Button className="rounded-xl h-11 shadow-md shadow-primary/20 px-6 font-medium">
-                        <Edit2 className="mr-2 h-4 w-4" /> Edit Product
-                    </Button>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column: Images */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white p-2 rounded-3xl border border-border shadow-sm">
-                        <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-secondary">
-                            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" />
-                        </div>
-                        <div className="grid grid-cols-3 gap-2 mt-2">
-                            {product.images.slice(1).map((img, i) => (
-                                <div key={i} className="aspect-square rounded-xl overflow-hidden bg-secondary cursor-pointer border-2 border-transparent hover:border-primary transition-colors">
-                                    <img src={img} alt={`${product.name} view ${i + 2}`} className="w-full h-full object-cover" />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <Tabs defaultValue="details" className="w-full">
-                        <TabsList className="w-full justify-start border-b border-border rounded-none h-14 bg-transparent p-0">
-                            <TabsTrigger value="details" className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 font-medium">
-                                <Info className="w-4 h-4 mr-2" /> Details
-                            </TabsTrigger>
-                            <TabsTrigger value="specs" className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 font-medium">
-                                <LayoutList className="w-4 h-4 mr-2" /> Specifications
-                            </TabsTrigger>
-                        </TabsList>
-                        <div className="bg-white rounded-b-2xl rounded-tr-2xl border border-t-0 border-border p-6 shadow-sm">
-                            <TabsContent value="details" className="m-0 focus-visible:outline-none animate-fade-in">
-                                <h3 className="text-lg font-semibold mb-3">Product Description</h3>
-                                <p className="text-muted-foreground leading-relaxed">{product.description}</p>
-                                <div className="mt-6">
-                                    <h3 className="text-lg font-semibold mb-3">SEO Preview</h3>
-                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                        <p className="text-blue-600 text-lg sm:text-xl font-medium line-clamp-1">{product.name} | Chetak Plus</p>
-                                        <p className="text-green-700 text-sm mb-1">https://chetakplus.com/products/{product.id.toLowerCase()}</p>
-                                        <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
-                                    </div>
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="specs" className="m-0 focus-visible:outline-none animate-fade-in">
-                                <div className="space-y-0 text-sm">
-                                    {product.specs.map((spec, i) => (
-                                        <div key={i} className={`flex py-3 px-4 ${i % 2 === 0 ? 'bg-gray-50/50 rounded-lg' : ''}`}>
-                                            <span className="w-1/3 font-medium text-muted-foreground">{spec.label}</span>
-                                            <span className="w-2/3 font-medium text-foreground">{spec.value}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </TabsContent>
-                        </div>
-                    </Tabs>
-                </div>
-
-                {/* Right Column: Pricing & Inventory */}
-                <div className="space-y-6">
-                    <div className="bg-white rounded-3xl border border-border shadow-sm p-6 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -z-10" />
-                        <h3 className="text-lg font-semibold mb-6 flex items-center">
-                            <PackageOpen className="w-5 h-5 mr-2 text-primary" /> Core Information
-                        </h3>
-
-                        <div className="space-y-6">
-                            <div>
-                                <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1 block">Pricing</label>
-                                <div className="flex items-end gap-3">
-                                    <span className="text-3xl font-sans font-bold text-foreground">₹{product.price}</span>
-                                    {product.compareAtPrice && (
-                                        <span className="text-lg text-muted-foreground line-through mb-1">₹{product.compareAtPrice}</span>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="h-px bg-border my-4" />
-
-                            <div>
-                                <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-2 block">Inventory Details</label>
-                                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl mb-3">
-                                    <span className="font-medium text-sm">Available Units</span>
-                                    <span className="font-bold text-lg">{product.stock}</span>
-                                </div>
-                                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                                    <span className="font-medium text-sm">Category</span>
-                                    <span className="font-semibold text-sm text-primary">{product.category}</span>
-                                </div>
-                            </div>
-
-                            <div className="h-px bg-border my-4" />
-
-                            <div>
-                                <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-2 block">Organization</label>
-                                <div className="space-y-3 mt-2">
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="text-muted-foreground">Vendor</span>
-                                        <span className="font-medium text-right">{product.vendor}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="text-muted-foreground">Tags</span>
-                                        <span className="font-medium text-right max-w-[150px] truncate">{product.tags}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-3xl border border-border p-5 text-sm text-center text-muted-foreground">
-                        <p>Last edited on Oct 24, 2023 by Admin</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+      <Panel className="p-6">
+        <p className="text-sm text-slate-500">Product not found.</p>
+      </Panel>
     );
+  }
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Product Details"
+        description="Detailed product profile with media, pricing, category, and stock information."
+        actions={
+          <>
+            <Button variant="outline" className="rounded-xl" onClick={() => navigate("/admin/products")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+            <Button className="rounded-xl bg-slate-900 text-white hover:bg-slate-800" onClick={() => navigate(`/admin/products/new?source=${product.id}`)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit Product
+            </Button>
+          </>
+        }
+      />
+
+      <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
+        <Panel className="space-y-4 p-5 sm:p-6">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+            <img src={activeImage} alt={product.name} className="h-[340px] w-full object-cover" />
+          </div>
+
+          <div className="grid grid-cols-4 gap-2">
+            {product.images.map((image) => (
+              <button
+                type="button"
+                key={image}
+                onClick={() => setActiveImage(image)}
+                className={`overflow-hidden rounded-lg border ${activeImage === image ? "border-slate-900" : "border-slate-200"}`}
+              >
+                <img src={image} alt={product.name} className="h-20 w-full object-cover" />
+              </button>
+            ))}
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <h2 className="text-base font-semibold text-slate-900">Description</h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">{product.description}</p>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <h2 className="text-base font-semibold text-slate-900">Rich Content Preview</h2>
+            <div
+              className="prose prose-sm mt-2 max-w-none text-slate-600"
+              dangerouslySetInnerHTML={{ __html: product.richDescription }}
+            />
+          </div>
+        </Panel>
+
+        <div className="space-y-4">
+          <Panel className="space-y-4 p-5 sm:p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Product</p>
+                <h2 className="mt-2 text-xl font-semibold text-slate-900">{product.name}</h2>
+                <p className="mt-1 text-xs font-mono text-slate-500">{product.id}</p>
+              </div>
+              <StatusBadge value={product.status} />
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              <StatLabel label="Price" value={formatCurrency(product.price)} />
+              <StatLabel label="Discount" value={`${product.discount}%`} />
+              <StatLabel label="Category" value={product.category} />
+              <StatLabel label="Stock" value={String(product.stock)} />
+              <StatLabel label="SKU" value={product.sku} />
+              <StatLabel label="Updated" value={product.updatedAt} />
+            </div>
+          </Panel>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default AdminProductDetail;
