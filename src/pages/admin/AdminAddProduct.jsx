@@ -1,13 +1,13 @@
-﻿import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, ImagePlus, UploadCloud } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, ImagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { categoriesData, formatCurrency } from "@/data/adminMockData";
 import { PageHeader, Panel } from "@/components/admin/AdminUi";
 import { cn } from "@/lib/utils";
+import api from "@/api";
 
 const steps = [
   { key: "basic", title: "Basic Info" },
@@ -19,7 +19,7 @@ const steps = [
 
 const initialFormData = {
   name: "",
-  category: "",
+  categoryId: "",
   price: "",
   discount: "",
   images: [],
@@ -27,57 +27,166 @@ const initialFormData = {
   stock: "",
   sku: "",
   status: "Active",
+  brand: "ChetakPlus",
 };
 
-const EditorToolbarButton = ({ label, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100"
-  >
-    {label}
-  </button>
-);
+const formatCurrency = (value) => `Rs ${Number(value || 0).toLocaleString("en-IN")}`;
+
+const calculateDiscount = (price, originalPrice) => {
+  const p = Number(price || 0);
+  const op = Number(originalPrice || 0);
+  if (p <= 0 || op <= p) return 0;
+  return Math.round(((op - p) / op) * 100);
+};
 
 const AdminAddProduct = () => {
   const navigate = useNavigate();
+  const { id: routeProductId } = useParams();
+  const [searchParams] = useSearchParams();
+  const sourceProductId = searchParams.get("source");
+  const productId = routeProductId || sourceProductId || null;
+  const isEditMode = Boolean(productId);
+
   const [stepIndex, setStepIndex] = useState(0);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState(initialFormData);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadData = async () => {
+      try {
+        const [categoryData, productData] = await Promise.all([
+          api.adminGetCategories(),
+          isEditMode ? api.adminGetProductById(productId) : Promise.resolve(null),
+        ]);
+
+        if (!isMounted) return;
+
+        const normalizedCategories = Array.isArray(categoryData) ? categoryData : [];
+        setCategories(normalizedCategories);
+
+        if (productData) {
+          const derivedCategoryId =
+            productData.categoryId ||
+            normalizedCategories.find((category) => category.slug === productData.categorySlug)?.id ||
+            "";
+
+          setFormData({
+            name: productData.name || "",
+            categoryId: String(derivedCategoryId || ""),
+            price: productData.price ?? "",
+            discount: calculateDiscount(productData.price, productData.originalPrice),
+            images: Array.isArray(productData.images) ? productData.images : [],
+            description: productData.description || "",
+            stock: productData.stock ?? "",
+            sku: productData.sku || "",
+            status: productData.status || "Active",
+            brand: productData.brand || "ChetakPlus",
+          });
+        }
+
+        setError("");
+      } catch (fetchError) {
+        if (!isMounted) return;
+        setError(fetchError?.message || "Unable to load product data.");
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, [isEditMode, productId]);
+
   const percent = useMemo(() => ((stepIndex + 1) / steps.length) * 100, [stepIndex]);
+  const parsedImages = useMemo(() => (Array.isArray(formData.images) ? formData.images.filter(Boolean) : []), [formData.images]);
+
+  const selectedCategoryName =
+    categories.find((category) => String(category.id) === String(formData.categoryId))?.name || "";
 
   const nextStep = () => setStepIndex((prev) => Math.min(prev + 1, steps.length - 1));
   const previousStep = () => setStepIndex((prev) => Math.max(prev - 1, 0));
 
-  const onUploadImages = (event) => {
-    const files = Array.from(event.target.files || []);
-    if (!files.length) return;
+  const handleImagesUpload = async (files) => {
+    if (!files?.length) return;
+    setUploadingImages(true);
+    setError("");
 
-    const previewImages = files.map((file) => ({ id: crypto.randomUUID(), url: URL.createObjectURL(file), name: file.name }));
-    setFormData((prev) => ({ ...prev, images: [...prev.images, ...previewImages] }));
+    try {
+      const uploadResults = await Promise.all(
+        Array.from(files).map((file) => api.adminUploadMedia(file, { folder: "products", kind: "image" })),
+      );
+      const urls = uploadResults.map((result) => result?.url).filter(Boolean);
+      if (!urls.length) {
+        throw new Error("No image uploaded");
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        images: Array.from(new Set([...(Array.isArray(prev.images) ? prev.images : []), ...urls])),
+      }));
+    } catch (uploadError) {
+      setError(uploadError?.message || "Unable to upload product image.");
+    } finally {
+      setUploadingImages(false);
+    }
   };
 
-  const removeImage = (id) => {
-    setFormData((prev) => ({ ...prev, images: prev.images.filter((image) => image.id !== id) }));
-  };
-
-  const appendDescriptionToken = (token) => {
-    setFormData((prev) => ({ ...prev, description: `${prev.description}${prev.description ? "\n" : ""}${token}` }));
-  };
-
-  const publishProduct = () => {
+  const publishProduct = async () => {
     setIsPublishing(true);
-    setTimeout(() => {
-      setIsPublishing(false);
+    setError("");
+
+    try {
+      const payload = {
+        name: formData.name,
+        brand: formData.brand || "ChetakPlus",
+        categoryId: formData.categoryId || null,
+        price: Number(formData.price),
+        discount: Number(formData.discount || 0),
+        images: parsedImages,
+        description: formData.description,
+        shortDescription: formData.description ? formData.description.slice(0, 220) : "",
+        stock: Number(formData.stock || 0),
+        sku: formData.sku,
+        status: formData.status,
+      };
+
+      if (isEditMode) {
+        await api.adminUpdateProduct(productId, payload);
+      } else {
+        await api.adminCreateProduct(payload);
+      }
+
       navigate("/admin/products");
-    }, 900);
+    } catch (submitError) {
+      setError(submitError?.message || "Unable to save product.");
+      setStepIndex(0);
+    } finally {
+      setIsPublishing(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <Panel className="p-6">
+        <p className="text-sm text-slate-500">Loading product form...</p>
+      </Panel>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Add Product"
+        title={isEditMode ? "Edit Product" : "Add Product"}
         description="Build product details in a guided 5-step publishing workflow."
         actions={
           <Button variant="outline" className="rounded-xl" onClick={() => navigate("/admin/products")}>
@@ -86,6 +195,12 @@ const AdminAddProduct = () => {
           </Button>
         }
       />
+
+      {error ? (
+        <Panel className="border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+          {error}
+        </Panel>
+      ) : null}
 
       <Panel className="p-5 sm:p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -123,16 +238,26 @@ const AdminAddProduct = () => {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="product-brand">Brand</Label>
+              <Input
+                id="product-brand"
+                value={formData.brand}
+                onChange={(event) => setFormData((prev) => ({ ...prev, brand: event.target.value }))}
+                placeholder="ChetakPlus"
+                className="rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="product-category">Category</Label>
               <select
                 id="product-category"
-                value={formData.category}
-                onChange={(event) => setFormData((prev) => ({ ...prev, category: event.target.value }))}
+                value={formData.categoryId}
+                onChange={(event) => setFormData((prev) => ({ ...prev, categoryId: event.target.value }))}
                 className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"
               >
                 <option value="">Select category</option>
-                {categoriesData.map((category) => (
-                  <option key={category.id} value={category.name}>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
                     {category.name}
                   </option>
                 ))}
@@ -154,6 +279,8 @@ const AdminAddProduct = () => {
               <Input
                 id="product-discount"
                 type="number"
+                min="0"
+                max="100"
                 value={formData.discount}
                 onChange={(event) => setFormData((prev) => ({ ...prev, discount: event.target.value }))}
                 placeholder="0"
@@ -165,33 +292,57 @@ const AdminAddProduct = () => {
 
         {stepIndex === 1 ? (
           <div className="space-y-4">
-            <label
-              htmlFor="product-images"
-              className="flex min-h-[180px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 text-center"
-            >
-              <UploadCloud className="mb-2 h-6 w-6 text-slate-500" />
-              <p className="text-sm font-medium text-slate-700">Upload multiple product images</p>
-              <p className="text-xs text-slate-500">PNG, JPG, WEBP supported</p>
-            </label>
-            <Input id="product-images" type="file" accept="image/*" multiple className="hidden" onChange={onUploadImages} />
+            <Label>Product Images</Label>
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="product-images-upload"
+                className={`inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border px-4 text-sm font-medium ${
+                  uploadingImages
+                    ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <ImagePlus className="h-4 w-4" />
+                {uploadingImages ? "Uploading images..." : "Upload images"}
+              </label>
+              <input
+                id="product-images-upload"
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                disabled={uploadingImages}
+                onChange={(event) => {
+                  void handleImagesUpload(event.target.files);
+                  event.target.value = "";
+                }}
+              />
+              <span className="text-xs text-slate-500">Upload real product photos. No URL paste needed.</span>
+            </div>
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {formData.images.map((image) => (
-                <div key={image.id} className="relative overflow-hidden rounded-xl border border-slate-200">
-                  <img src={image.url} alt={image.name} className="h-28 w-full object-cover" />
+              {parsedImages.map((image, index) => (
+                <div key={`${image}-${index}`} className="group relative overflow-hidden rounded-xl border border-slate-200">
+                  <img src={image} alt="Product preview" className="h-28 w-full object-cover" />
                   <button
                     type="button"
-                    onClick={() => removeImage(image.id)}
-                    className="absolute right-2 top-2 rounded-md bg-black/70 px-2 py-1 text-[10px] font-medium text-white"
+                    className="absolute right-1 top-1 inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition group-hover:opacity-100"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        images: (Array.isArray(prev.images) ? prev.images : []).filter((item) => item !== image),
+                      }))
+                    }
+                    aria-label="Remove image"
                   >
-                    Remove
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
               ))}
-              {!formData.images.length ? (
-                <div className="flex h-28 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-500">
+              {!parsedImages.length ? (
+                <div className="col-span-2 sm:col-span-4 flex h-28 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-500">
                   <ImagePlus className="mr-2 h-4 w-4" />
-                  No images yet
+                  Upload at least one real product image
                 </div>
               ) : null}
             </div>
@@ -200,18 +351,14 @@ const AdminAddProduct = () => {
 
         {stepIndex === 2 ? (
           <div className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              <EditorToolbarButton label="H2" onClick={() => appendDescriptionToken("## Heading")} />
-              <EditorToolbarButton label="Bold" onClick={() => appendDescriptionToken("**Bold text**")} />
-              <EditorToolbarButton label="Bullet" onClick={() => appendDescriptionToken("- Bullet point")} />
-              <EditorToolbarButton label="Link" onClick={() => appendDescriptionToken("[Link title](https://)")} />
-            </div>
+            <Label htmlFor="product-description">Description</Label>
             <Textarea
+              id="product-description"
               rows={12}
               value={formData.description}
               onChange={(event) => setFormData((prev) => ({ ...prev, description: event.target.value }))}
               placeholder="Write detailed product description..."
-              className="rounded-xl font-mono text-sm"
+              className="rounded-xl text-sm"
             />
           </div>
         ) : null}
@@ -264,7 +411,7 @@ const AdminAddProduct = () => {
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Category</p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">{formData.category || "-"}</p>
+                <p className="mt-1 text-sm font-semibold text-slate-800">{selectedCategoryName || "-"}</p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Price</p>
@@ -297,7 +444,7 @@ const AdminAddProduct = () => {
             </Button>
           ) : (
             <Button className="rounded-xl bg-slate-900 text-white hover:bg-slate-800" onClick={publishProduct} disabled={isPublishing}>
-              {isPublishing ? "Publishing..." : "Publish Product"}
+              {isPublishing ? "Saving..." : isEditMode ? "Update Product" : "Publish Product"}
             </Button>
           )}
         </div>
