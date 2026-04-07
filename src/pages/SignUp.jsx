@@ -1,44 +1,76 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import { useAuth } from "@/context/AuthContext";
+import api from "@/api";
+import { GoogleLogin } from "@react-oauth/google";
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login, loginWithGoogle } = useAuth();
+
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
     password: "",
+    confirmPassword: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+
+  const redirectTarget = (() => {
+    const fromQuery = new URLSearchParams(location.search).get("redirect") || "";
+    if (fromQuery.startsWith("/")) return fromQuery;
+    return "/shop";
+  })();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSignUp = (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate registration
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success("Account created successfully!");
-      navigate("/shop");
-    }, 1500);
-  };
+    const email = formData.email.trim().toLowerCase();
+    const phone = formData.phone.trim();
 
-  const handleGoogleSignUp = () => {
-    setIsLoading(true);
-    // Simulate Google Sign-up
-    setTimeout(() => {
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match.");
       setIsLoading(false);
-      toast.success("Account created with Google!");
-      navigate("/shop");
-    }, 1500);
+      return;
+    }
+
+    try {
+      const response = await api.authSignUp({
+        name: formData.name,
+        email,
+        phone,
+        password: formData.password,
+      });
+
+      login(response.user);
+
+      toast.success(response.message || "Account created successfully!");
+      navigate(redirectTarget, { replace: true });
+    } catch (error) {
+      console.error("Sign up error:", error);
+
+      if (error?.status === 409) {
+        toast.error(error?.message || "Email or phone already exists.");
+      } else if (error?.status === 422) {
+        toast.error(error?.message || "Please enter valid signup details.");
+      } else {
+        toast.error(error?.message || "Failed to create account. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -87,21 +119,24 @@ const SignUp = () => {
               <p className="text-[13px] text-muted-foreground">Sign up to get started</p>
             </div>
 
-            <div className="mb-8">
-              <button
-                type="button"
-                onClick={handleGoogleSignUp}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center py-3 px-4 border border-border rounded-xl hover:bg-secondary transition-colors disabled:opacity-50 shadow-sm text-sm font-medium gap-3 bg-background group"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="18px" height="18px" className="group-hover:scale-110 transition-transform">
-                  <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.238-2.65-.611-3.917z" />
-                  <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z" />
-                  <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
-                  <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571.001-.001.002-.001.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.238-2.65-.611-3.917z" />
-                </svg>
-                Sign up with Google
-              </button>
+            <div className="mb-8 flex justify-center">
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  const userData = loginWithGoogle(credentialResponse.credential);
+                  if (userData) {
+                    toast.success("Account created with Google!");
+                    navigate(redirectTarget, { replace: true });
+                  }
+                }}
+                onError={() => {
+                  toast.error("Google Registration failed.");
+                }}
+                useOneTap
+                theme="outline"
+                shape="pill"
+                size="large"
+                width="100%"
+              />
             </div>
 
             <div className="flex items-center gap-4 mb-8">
@@ -148,6 +183,25 @@ const SignUp = () => {
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1">Phone <span className="text-primary text-[10px]">*</span></label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
+                    <Phone size={16} strokeWidth={2} />
+                  </div>
+                  <input
+                    type="tel"
+                    name="phone"
+                    required
+                    pattern="[0-9]{10,15}"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="10 digit phone number"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm transition-all text-[13px] text-foreground placeholder:text-muted-foreground/50"
+                  />
+                </div>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1">Password <span className="text-primary text-[10px]">*</span></label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
@@ -172,6 +226,24 @@ const SignUp = () => {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1">Confirm Password <span className="text-primary text-[10px]">*</span></label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
+                    <Lock size={16} strokeWidth={2} />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    required
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Confirm your password"
+                    className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm transition-all text-[13px] text-foreground placeholder:text-muted-foreground/50"
+                  />
+                </div>
+              </div>
+
               <button
                 type="submit"
                 disabled={isLoading}
@@ -188,7 +260,10 @@ const SignUp = () => {
             <div className="text-center mt-10">
               <p className="text-[13px] text-muted-foreground">
                 Already have an account?{" "}
-                <Link to="/signin" className="text-primary font-bold hover:underline">
+                <Link
+                  to={redirectTarget !== "/shop" ? `/signin?redirect=${encodeURIComponent(redirectTarget)}` : "/signin"}
+                  className="text-primary font-bold hover:underline"
+                >
                   Sign in
                 </Link>
                 {" "}•{" "}
