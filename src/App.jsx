@@ -12,6 +12,9 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import ScrollToTop from "@/components/ScrollToTop";
 import OfferPopup from "@/components/OfferPopup";
 import { DataProvider } from "@/context/DataContext";
+import { AuthProvider } from "@/context/AuthContext";
+import { RequireAuth, GuestOnly } from "@/components/auth/AuthGuards";
+
 import Index from "./pages/Index";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
@@ -29,6 +32,9 @@ import Checkout from "./pages/Checkout";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import Profile from "./pages/Profile";
+
 
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -50,12 +56,14 @@ import AdminPaymentDetail from "./pages/admin/AdminPaymentDetail";
 import AdminContacts from "./pages/admin/AdminContacts";
 import AdminContactDetail from "./pages/admin/AdminContactDetail";
 import AdminSettings from "./pages/admin/AdminSettings";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
 const queryClient = new QueryClient();
 
 const AppContent = () => {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
-  const isAuthPage = ["/signin", "/signup", "/forgot-password", "/admin/login"].includes(location.pathname);
+  const isAuthPage = ["/signin", "/signup", "/forgot-password", "/reset-password", "/admin/login"].includes(location.pathname);
   const hideCustomerUI = isAuthPage || isAdmin;
 
   return (
@@ -81,10 +89,19 @@ const AppContent = () => {
           <Route path="/privacy-policy" element={<PolicyPage />} />
           <Route path="/shipping-policy" element={<PolicyPage />} />
           <Route path="/refund-policy" element={<PolicyPage />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+
+          <Route element={<RequireAuth />}>
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
+
+          <Route element={<GuestOnly />}>
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+          </Route>
+
 
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
@@ -97,6 +114,7 @@ const AppContent = () => {
             <Route path="products" element={<AdminProducts />} />
             <Route path="products/new" element={<AdminAddProduct />} />
             <Route path="products/add" element={<AdminAddProduct />} />
+            <Route path="products/:id/edit" element={<AdminAddProduct />} />
             <Route path="products/:id" element={<AdminProductDetail />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="orders/:orderId" element={<AdminOrderDetail />} />
@@ -120,21 +138,25 @@ const AppContent = () => {
 };
 
 const App = () =>
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <CartProvider>
-        <WishlistProvider>
-          <DataProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AppContent />
-            </BrowserRouter>
-          </DataProvider>
-        </WishlistProvider>
-      </CartProvider>
-    </TooltipProvider>
-  </QueryClientProvider>;
+  <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ""}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <DataProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <AppContent />
+                </BrowserRouter>
+              </DataProvider>
+            </WishlistProvider>
+          </CartProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </GoogleOAuthProvider>;
 
 
 export default App;
