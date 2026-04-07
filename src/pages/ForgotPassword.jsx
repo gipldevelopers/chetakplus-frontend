@@ -1,25 +1,47 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { Mail, ArrowLeft } from "lucide-react";
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import api from "@/api";
 
 const ForgotPassword = () => {
-  const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [mailDispatched, setMailDispatched] = useState(true);
+  const [resetLink, setResetLink] = useState("");
+  const [mailError, setMailError] = useState("");
 
-  const handleSubmit = (e) => {
+  const redirectTarget = (() => {
+    const fromQuery = new URLSearchParams(location.search).get("redirect") || "";
+    return fromQuery.startsWith("/") ? fromQuery : "/shop";
+  })();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate sending password reset email
-    setTimeout(() => {
+    try {
+      const response = await api.authForgotPassword({ email: email.trim().toLowerCase() });
       setIsLoading(false);
       setIsSubmitted(true);
-      toast.success("Password reset instructions sent to your email!");
-    }, 1500);
+      setMailDispatched(Boolean(response?.mailDispatched));
+      setResetLink(String(response?.resetLink || ""));
+      setMailError(String(response?.mailError || ""));
+
+      if (response?.mailDispatched) {
+        toast.success(response.message || "Password reset instructions sent.");
+      } else if (response?.resetLink) {
+        toast.warning("Mail was not sent. Use the reset link shown on screen.");
+      } else {
+        toast.info(response?.message || "If the email exists, reset instructions will be sent.");
+      }
+    } catch (error) {
+      setIsLoading(false);
+      toast.error(error?.message || "Unable to process forgot password request.");
+    }
   };
 
   return (
@@ -107,11 +129,57 @@ const ForgotPassword = () => {
                   <Mail size={32} />
                 </div>
                 <h2 className="text-2xl font-bold text-foreground mb-3 font-display">Check your email</h2>
-                <p className="text-[13px] text-muted-foreground mb-8">
-                  We've sent password reset instructions to <br/><span className="font-medium text-foreground">{email}</span>
-                </p>
+                {mailDispatched ? (
+                  <p className="text-[13px] text-muted-foreground mb-8">
+                    We've sent password reset instructions to <br/><span className="font-medium text-foreground">{email}</span>
+                  </p>
+                ) : (
+                  <div className="text-left mb-8 space-y-3">
+                    <p className="text-[13px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                      Email was not delivered from server. Use this direct reset link for now.
+                    </p>
+                    {resetLink ? (
+                      <div className="space-y-2">
+                        <a
+                          href={resetLink}
+                          className="block text-xs break-all text-primary underline"
+                        >
+                          {resetLink}
+                        </a>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(resetLink);
+                              toast.success("Reset link copied");
+                            } catch {
+                              toast.error("Unable to copy link");
+                            }
+                          }}
+                          className="text-xs font-semibold text-primary hover:underline"
+                        >
+                          Copy reset link
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        No direct link was generated. Please try again.
+                      </p>
+                    )}
+                    {mailError ? (
+                      <p className="text-[11px] text-muted-foreground break-words">
+                        Mail error: {mailError}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
                 <button
-                  onClick={() => setIsSubmitted(false)}
+                  onClick={() => {
+                    setIsSubmitted(false);
+                    setResetLink("");
+                    setMailError("");
+                    setMailDispatched(true);
+                  }}
                   className="text-sm font-medium text-primary hover:underline"
                 >
                   Didn't receive the email? Try again.
@@ -120,7 +188,10 @@ const ForgotPassword = () => {
             )}
 
             <div className="text-center mt-10">
-              <Link to="/signin" className="inline-flex items-center gap-2 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors group">
+              <Link
+                to={redirectTarget !== "/shop" ? `/signin?redirect=${encodeURIComponent(redirectTarget)}` : "/signin"}
+                className="inline-flex items-center gap-2 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors group"
+              >
                 <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back to Sign In
               </Link>
             </div>
