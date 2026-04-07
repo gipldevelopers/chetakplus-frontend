@@ -1,11 +1,17 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import { useAuth } from "@/context/AuthContext";
+import api from "@/api";
+import { GoogleLogin } from "@react-oauth/google";
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login, loginWithGoogle } = useAuth();
+
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -13,37 +19,55 @@ const SignIn = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  const redirectFromState = location.state?.from?.pathname
+    ? `${location.state.from.pathname}${location.state.from.search || ""}${location.state.from.hash || ""}`
+    : "";
+  const redirectFromQuery = new URLSearchParams(location.search).get("redirect") || "";
+  const redirectTarget = (redirectFromQuery || redirectFromState || "/shop").startsWith("/")
+    ? (redirectFromQuery || redirectFromState || "/shop")
+    : "/shop";
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSignIn = (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate login
-    setTimeout(() => {
+    const email = formData.email.trim().toLowerCase();
+    const password = formData.password;
+
+    try {
+      const response = await api.authSignIn({ email, password });
+
+      login(response.user);
+      toast.success(response.message || "Signed in successfully!");
+      navigate(redirectTarget, { replace: true });
+    } catch (error) {
+      console.error("Sign in error:", error);
+
+      if (error?.status === 401) {
+        toast.error("Invalid email or password.");
+      } else if (error?.status === 422) {
+        toast.error(error?.message || "Please enter valid sign in details.");
+      } else {
+        toast.error(error?.message || "Failed to sign in. Please try again.");
+      }
+    } finally {
       setIsLoading(false);
-      toast.success("Signed in successfully!");
-      navigate("/shop");
-    }, 1500);
+    }
   };
 
-  const handleGoogleSignIn = () => {
-    setIsLoading(true);
-    // Simulate Google Sign-in
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success("Signed in with Google!");
-      navigate("/shop");
-    }, 1500);
-  };
+  // const handleGoogleSignIn = () => {
+  //   toast.info("Google sign-in is not configured yet.");
+  // };
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-background">
       {/* Left Panel */}
-      <div className="hidden lg:flex w-full lg:w-1/2 bg-secondary flex-col justify-center px-10 xl:px-20 relative overflow-hidden text-center items-center">
+      <div className="hidden lg:flex w-full lg:w-1/2 bg-secondary flex-col justify-center px-10 xl:px-20 relative overflow-hidden">
         {/* Decorative elements for stationey vibe */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
@@ -57,12 +81,12 @@ const SignIn = () => {
         </div>
         
         <ScrollReveal>
-          <div className="max-w-md relative z-10 flex flex-col items-center">
+          <div className="max-w-md relative z-10">
             <h1 className="font-display text-4xl xl:text-5xl font-bold text-foreground leading-tight mb-6">
-              Welcome back to ChetakPlus
+              Welcome Back to ChetakPlus
             </h1>
-            <p className="text-lg text-muted-foreground leading-relaxed max-w-sm">
-              Your journey to organized brilliance starts here. Premium quality stationery for your everyday workspace.
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Sign in to access your curated collection of premium stationery and keep your workspace inspired.
             </p>
           </div>
         </ScrollReveal>
@@ -83,24 +107,27 @@ const SignIn = () => {
           <ScrollReveal delay={0.1}>
             <div className="mb-8 text-center sm:text-left">
               <h2 className="text-2xl font-bold text-foreground mb-1.5 font-display">Sign in to your account</h2>
-              <p className="text-[13px] text-muted-foreground">Enter your credentials to continue your journey</p>
+              <p className="text-[13px] text-muted-foreground">Welcome back! Please enter your details</p>
             </div>
 
-            <div className="mb-8">
-              <button
-                type="button"
-                onClick={handleGoogleSignIn}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center py-3 px-4 border border-border rounded-xl hover:bg-secondary transition-colors disabled:opacity-50 shadow-sm text-sm font-medium gap-3 bg-background group"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="18px" height="18px" className="group-hover:scale-110 transition-transform">
-                  <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.238-2.65-.611-3.917z" />
-                  <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z" />
-                  <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
-                  <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571.001-.001.002-.001.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.238-2.65-.611-3.917z" />
-                </svg>
-                Sign in with Google
-              </button>
+            <div className="mb-8 flex justify-center">
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  const userData = loginWithGoogle(credentialResponse.credential);
+                  if (userData) {
+                    toast.success("Signed in with Google!");
+                    navigate(redirectTarget, { replace: true });
+                  }
+                }}
+                onError={() => {
+                  toast.error("Google Sign-In failed.");
+                }}
+                useOneTap
+                theme="outline"
+                shape="pill"
+                size="large"
+                width="100%"
+              />
             </div>
 
             <div className="flex items-center gap-4 mb-8">
@@ -109,7 +136,7 @@ const SignIn = () => {
               <div className="flex-1 border-t border-border"></div>
             </div>
 
-            <form onSubmit={handleSignIn} className="space-y-5">
+            <form onSubmit={handleSignIn} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1">Email <span className="text-primary text-[10px]">*</span></label>
                 <div className="relative">
@@ -129,7 +156,16 @@ const SignIn = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1">Password <span className="text-primary text-[10px]">*</span></label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm font-medium text-foreground flex items-center gap-1">Password <span className="text-primary text-[10px]">*</span></label>
+                  <Link
+                    to={redirectTarget !== "/shop" ? `/forgot-password?redirect=${encodeURIComponent(redirectTarget)}` : "/forgot-password"}
+                    size="sm"
+                    className="text-[11px] font-bold text-primary hover:underline transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
                     <Lock size={16} strokeWidth={2} />
@@ -153,17 +189,10 @@ const SignIn = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-1 pb-4">
-                <Link to="#" className="text-[13px] font-medium text-primary flex items-center gap-1.5 hover:underline transition-all hover:text-primary/80">
-                  <Mail size={14} /> Login without password
-                </Link>
-                <Link to="/forgot-password" className="text-[13px] font-medium text-primary hover:underline transition-all hover:text-primary/80">Forgot password?</Link>
-              </div>
-
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-primary text-primary-foreground py-3.5 rounded-xl font-semibold text-[15px] hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-70"
+                className="w-full bg-primary text-primary-foreground py-3.5 rounded-xl font-semibold text-[15px] hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-70 mt-6"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
@@ -176,12 +205,11 @@ const SignIn = () => {
             <div className="text-center mt-10">
               <p className="text-[13px] text-muted-foreground">
                 Don't have an account?{" "}
-                <Link to="/signup" className="text-primary font-bold hover:underline">
-                  Sign up
-                </Link>
-                {" "}•{" "}
-                <Link to="/privacy-policy" className="text-muted-foreground hover:text-foreground hover:underline transition-colors">
-                  Privacy Policy
+                <Link
+                  to={redirectTarget !== "/shop" ? `/signup?redirect=${encodeURIComponent(redirectTarget)}` : "/signup"}
+                  className="text-primary font-bold hover:underline"
+                >
+                  Create Account
                 </Link>
               </p>
             </div>
