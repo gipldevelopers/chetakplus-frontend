@@ -1,24 +1,67 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { heroSectionsData } from "@/data/adminMockData";
+import api from "@/api";
 import { PageHeader, Panel, StatusBadge, Pagination } from "@/components/admin/AdminUi";
+
+const ITEMS_PER_PAGE = 5;
 
 const AdminHeroList = () => {
   const navigate = useNavigate();
-  const [heroes, setHeroes] = useState(heroSectionsData);
+  const [heroes, setHeroes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
 
-  const totalPages = Math.ceil(heroes.length / itemsPerPage);
-  const paginatedHeroes = heroes.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchHeroes = async () => {
+      try {
+        const data = await api.adminGetHeroes();
+        if (!isMounted) return;
+        setHeroes(Array.isArray(data) ? data : []);
+        setError("");
+      } catch (fetchError) {
+        if (!isMounted) return;
+        setError(fetchError?.message || "Unable to load hero slides.");
+        setHeroes([]);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchHeroes();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(heroes.length / ITEMS_PER_PAGE)), [heroes.length]);
+  const paginatedHeroes = useMemo(
+    () => heroes.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE),
+    [heroes, currentPage],
   );
 
-  const handleDelete = (id) => {
-    setHeroes((prev) => prev.filter((hero) => hero.id !== id));
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const handleDelete = async (id) => {
+    const shouldDelete = window.confirm("Delete this hero slide?");
+    if (!shouldDelete) return;
+
+    try {
+      await api.adminDeleteHero(id);
+      setHeroes((prev) => prev.filter((hero) => hero.id !== id));
+    } catch (deleteError) {
+      setError(deleteError?.message || "Unable to delete hero slide.");
+    }
   };
 
   return (
@@ -34,67 +77,87 @@ const AdminHeroList = () => {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {paginatedHeroes.map((hero) => (
-          <Panel key={hero.id} className="overflow-hidden">
-            <div className="relative aspect-[16/10] overflow-hidden">
-              <img src={hero.image} alt={hero.title} className="h-full w-full object-cover transition duration-500 hover:scale-105" />
-              <div className="absolute left-3 top-3">
-                <StatusBadge value={hero.status} />
-              </div>
-            </div>
+      {error ? (
+        <Panel className="border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+          {error}
+        </Panel>
+      ) : null}
 
-            <div className="space-y-3 p-4">
-              <div>
-                <h2 className="line-clamp-1 text-base font-semibold text-slate-900">{hero.title}</h2>
-                <p className="mt-1 line-clamp-2 text-sm text-slate-500">{hero.subtitle}</p>
-              </div>
-
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs">
-                <p className="font-semibold uppercase tracking-[0.12em] text-slate-400">CTA</p>
-                <p className="mt-1 text-sm font-medium text-slate-800">{hero.buttonText}</p>
-                <p className="truncate text-slate-500">{hero.buttonLink}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-xs text-slate-500">
-                <div>
-                  <p className="uppercase tracking-[0.12em]">Alignment</p>
-                  <p className="mt-1 font-medium text-slate-700">{hero.alignment}</p>
-                </div>
-                <div>
-                  <p className="uppercase tracking-[0.12em]">Overlay</p>
-                  <p className="mt-1 font-medium text-slate-700">{hero.overlay ? "Enabled" : "Disabled"}</p>
+      {loading ? (
+        <Panel className="p-6 text-sm text-slate-500">Loading hero sections...</Panel>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {paginatedHeroes.map((hero) => (
+            <Panel key={hero.id} className="overflow-hidden">
+              <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+                {hero.mediaType === "video" ? (
+                  <video src={hero.imageUrl} poster={hero.posterUrl || undefined} muted autoPlay loop playsInline className="h-full w-full object-cover" />
+                ) : (
+                  <img src={hero.imageUrl} alt={hero.title} className="h-full w-full object-cover transition duration-500 hover:scale-105" />
+                )}
+                <div className="absolute left-3 top-3">
+                  <StatusBadge value={hero.status} />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-1">
-                <Link to={`/admin/hero/${hero.id}/edit`} className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900">
-                  <Edit className="h-4 w-4" />
-                  Edit
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(hero.id)}
-                  className="inline-flex items-center gap-2 text-sm font-medium text-rose-600 hover:text-rose-700"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete
-                </button>
-              </div>
-            </div>
-          </Panel>
-        ))}
-      </div>
+              <div className="space-y-3 p-4">
+                <div>
+                  <h2 className="line-clamp-1 text-base font-semibold text-slate-900">{hero.title}</h2>
+                  <p className="mt-1 line-clamp-2 text-sm text-slate-500">{hero.subtitle || hero.description}</p>
+                </div>
 
-      <div className="mt-8">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          totalItems={heroes.length}
-          itemsPerPage={itemsPerPage}
-        />
-      </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs">
+                  <p className="font-semibold uppercase tracking-[0.12em] text-slate-400">CTA</p>
+                  <p className="mt-1 text-sm font-medium text-slate-800">{hero.ctaText || "-"}</p>
+                  <p className="truncate text-slate-500">{hero.ctaLink || "-"}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs text-slate-500">
+                  <div>
+                    <p className="uppercase tracking-[0.12em]">Alignment</p>
+                    <p className="mt-1 font-medium text-slate-700">{hero.alignment}</p>
+                  </div>
+                  <div>
+                    <p className="uppercase tracking-[0.12em]">Overlay</p>
+                    <p className="mt-1 font-medium text-slate-700">{hero.overlay ? "Enabled" : "Disabled"}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <Link to={`/admin/hero/${hero.id}/edit`} className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900">
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(hero.id)}
+                    className="inline-flex items-center gap-2 text-sm font-medium text-rose-600 hover:text-rose-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </Panel>
+          ))}
+        </div>
+      )}
+
+      {!loading && heroes.length === 0 ? (
+        <Panel className="p-6 text-sm text-slate-500">No hero sections found yet.</Panel>
+      ) : null}
+
+      {heroes.length > 0 ? (
+        <div className="mt-8">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={heroes.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+          />
+        </div>
+      ) : null}
     </div>
   );
 };
