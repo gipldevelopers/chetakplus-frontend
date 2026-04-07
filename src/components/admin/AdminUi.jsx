@@ -47,13 +47,16 @@ const toneMap = {
   delivered: "border-emerald-200 bg-emerald-50 text-emerald-700",
   approved: "border-emerald-200 bg-emerald-50 text-emerald-700",
   paid: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  shipped: "border-blue-200 bg-blue-50 text-blue-700",
+  shipped: "border-indigo-200 bg-indigo-50 text-indigo-700",
+  confirmed: "border-blue-200 bg-blue-50 text-blue-700",
   processing: "border-blue-200 bg-blue-50 text-blue-700",
-  pending: "border-amber-200 bg-amber-50 text-amber-700",
+  placed: "border-amber-200 bg-amber-50 text-amber-700",
+  pending: "border-orange-200 bg-orange-50 text-orange-700",
   draft: "border-slate-200 bg-slate-100 text-slate-700",
   inactive: "border-slate-200 bg-slate-100 text-slate-700",
   rejected: "border-rose-200 bg-rose-50 text-rose-700",
   failed: "border-rose-200 bg-rose-50 text-rose-700",
+  cancelled: "border-rose-200 bg-rose-50 text-rose-700",
 };
 
 export const StatusBadge = ({ value }) => {
