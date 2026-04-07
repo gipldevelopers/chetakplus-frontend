@@ -1,16 +1,67 @@
-﻿import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getProductById, formatCurrency } from "@/data/adminMockData";
 import { PageHeader, Panel, StatLabel, StatusBadge } from "@/components/admin/AdminUi";
+import api from "@/api";
+
+const formatCurrency = (value) => `Rs ${Number(value || 0).toLocaleString("en-IN")}`;
 
 const AdminProductDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const product = useMemo(() => getProductById(id), [id]);
-  const [activeImage, setActiveImage] = useState(product?.images?.[0] || "");
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [activeImage, setActiveImage] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProduct = async () => {
+      try {
+        const data = await api.adminGetProductById(id);
+        if (!isMounted) return;
+        setProduct(data);
+        setActiveImage(data?.images?.[0] || "");
+        setError("");
+      } catch (fetchError) {
+        if (!isMounted) return;
+        setError(fetchError?.message || "Unable to load product.");
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadProduct();
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  const discountPercent = useMemo(() => {
+    if (!product?.originalPrice || product.originalPrice <= product.price) return 0;
+    return Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+  }, [product]);
+
+  if (loading) {
+    return (
+      <Panel className="p-6">
+        <p className="text-sm text-slate-500">Loading product...</p>
+      </Panel>
+    );
+  }
+
+  if (error) {
+    return (
+      <Panel className="border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
+        {error}
+      </Panel>
+    );
+  }
 
   if (!product) {
     return (
@@ -31,7 +82,7 @@ const AdminProductDetail = () => {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
-            <Button className="rounded-xl bg-slate-900 text-white hover:bg-slate-800" onClick={() => navigate(`/admin/products/new?source=${product.id}`)}>
+            <Button className="rounded-xl bg-slate-900 text-white hover:bg-slate-800" onClick={() => navigate(`/admin/products/${product.id}/edit`)}>
               <Pencil className="mr-2 h-4 w-4" />
               Edit Product
             </Button>
@@ -42,11 +93,15 @@ const AdminProductDetail = () => {
       <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
         <Panel className="space-y-4 p-5 sm:p-6">
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-            <img src={activeImage} alt={product.name} className="h-[340px] w-full object-cover" />
+            {activeImage ? (
+              <img src={activeImage} alt={product.name} className="h-[340px] w-full object-cover" />
+            ) : (
+              <div className="flex h-[340px] items-center justify-center text-sm text-slate-400">No image</div>
+            )}
           </div>
 
           <div className="grid grid-cols-4 gap-2">
-            {product.images.map((image) => (
+            {(product.images || []).map((image) => (
               <button
                 type="button"
                 key={image}
@@ -60,15 +115,7 @@ const AdminProductDetail = () => {
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <h2 className="text-base font-semibold text-slate-900">Description</h2>
-            <p className="mt-2 text-sm leading-relaxed text-slate-600">{product.description}</p>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <h2 className="text-base font-semibold text-slate-900">Rich Content Preview</h2>
-            <div
-              className="prose prose-sm mt-2 max-w-none text-slate-600"
-              dangerouslySetInnerHTML={{ __html: product.richDescription }}
-            />
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-600">{product.description || "-"}</p>
           </div>
         </Panel>
 
@@ -85,11 +132,11 @@ const AdminProductDetail = () => {
 
             <div className="grid gap-2 sm:grid-cols-2">
               <StatLabel label="Price" value={formatCurrency(product.price)} />
-              <StatLabel label="Discount" value={`${product.discount}%`} />
-              <StatLabel label="Category" value={product.category} />
-              <StatLabel label="Stock" value={String(product.stock)} />
-              <StatLabel label="SKU" value={product.sku} />
-              <StatLabel label="Updated" value={product.updatedAt} />
+              <StatLabel label="Discount" value={`${discountPercent}%`} />
+              <StatLabel label="Category" value={product.category || "-"} />
+              <StatLabel label="Stock" value={String(product.stock ?? 0)} />
+              <StatLabel label="SKU" value={product.sku || "-"} />
+              <StatLabel label="Updated" value={product.updatedAt || "-"} />
             </div>
           </Panel>
         </div>
