@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom";
 import { Heart, ArrowRight } from "lucide-react";
 import { useWishlist } from "@/context/WishlistContext";
-import ProductCard from "@/components/ProductCard";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
 const Wishlist = () => {
-  const { items } = useWishlist();
+  const { items, moveToCart, removeItem } = useWishlist();
 
   return (
     <div className="section-padding">
@@ -24,10 +23,26 @@ const Wishlist = () => {
         </ScrollReveal>
 
         {items.length > 0 ?
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {items.map((product, i) =>
           <ScrollReveal key={product.id} delay={i * 0.05}>
-                <ProductCard product={product} />
+                <div className="bg-card border border-border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="w-20 h-20 rounded-xl overflow-hidden border border-border bg-secondary/30 shrink-0">
+                    {product.images?.[0] ? <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" /> : null}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground line-clamp-1">{product.name}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Rs {Number(product.price || 0).toLocaleString("en-IN")}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => moveToCart(product)} className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold">
+                      Move to Cart
+                    </button>
+                    <button onClick={() => removeItem(product.id)} className="px-3 py-2 rounded-lg border border-border text-xs font-semibold text-rose-600">
+                      Remove
+                    </button>
+                  </div>
+                </div>
               </ScrollReveal>
           )}
           </div> :
