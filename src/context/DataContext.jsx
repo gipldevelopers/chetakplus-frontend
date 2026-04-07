@@ -19,13 +19,17 @@ export const DataProvider = ({ children }) => {
                 ]);
 
                 // If backend has items, combine them with static if desired, 
-                // or just replace them. To show "real-time" backend data, 
-                // we'll primarily use backend data.
+                // or just replace them. We prefer backend data and only
+                // fallback to static when backend is empty/unavailable.
                 if (backendProducts && backendProducts.length > 0) {
-                    setProducts([...backendProducts, ...staticProducts]);
+                    setProducts(backendProducts);
+                } else {
+                    setProducts(staticProducts);
                 }
                 if (backendCategories && backendCategories.length > 0) {
-                    setCategories([...backendCategories, ...staticCategories]);
+                    setCategories(backendCategories);
+                } else {
+                    setCategories(staticCategories);
                 }
 
                 setError(null);
