@@ -51,6 +51,7 @@ import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminCustomerDetail from "./pages/admin/AdminCustomerDetail";
 import AdminReviews from "./pages/admin/AdminReviews";
+import AdminReturns from "./pages/admin/AdminReturns";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminPaymentDetail from "./pages/admin/AdminPaymentDetail";
 import AdminContacts from "./pages/admin/AdminContacts";
@@ -121,6 +122,7 @@ const AppContent = () => {
             <Route path="customers" element={<AdminCustomers />} />
             <Route path="customers/:customerId" element={<AdminCustomerDetail />} />
             <Route path="reviews" element={<AdminReviews />} />
+            <Route path="returns" element={<AdminReturns />} />
             <Route path="payments" element={<AdminPayments />} />
             <Route path="payments/:paymentId" element={<AdminPaymentDetail />} />
             <Route path="contacts" element={<AdminContacts />} />
