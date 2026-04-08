@@ -9,6 +9,7 @@ export const api = {
   authSignUp: (payload) => apiClient.post("/auth/signup.php", payload),
   authSignIn: (payload) => apiClient.post("/auth/signin.php", payload),
   authForgotPassword: (payload) => apiClient.post("/auth/forgot-password.php", payload),
+  authVerifyResetToken: ({ email, token }) => apiClient.get("/auth/reset-password.php", { params: { email, token } }),
   authResetPassword: (payload) => apiClient.post("/auth/reset-password.php", payload),
 
   adminLogin: (payload) => apiClient.post("/admin/login.php", payload),
@@ -20,12 +21,8 @@ export const api = {
   adminUploadMedia: (file, options = {}) => {
     const formData = new FormData();
     formData.append("file", file);
-    if (options.folder) {
-      formData.append("folder", options.folder);
-    }
-    if (options.kind) {
-      formData.append("kind", options.kind);
-    }
+    if (options.folder) formData.append("folder", options.folder);
+    if (options.kind) formData.append("kind", options.kind);
     return apiClient.post("/admin/upload.php", formData);
   },
 
@@ -52,6 +49,7 @@ export const api = {
   adminGetPayments: (params = {}) => apiClient.get("/admin/payments.php", { params }),
   adminGetPaymentById: (id) => apiClient.get("/admin/payments.php", { params: { id } }),
   adminUpdatePayment: (id, payload) => apiClient.put("/admin/payments.php", payload, { params: { id } }),
+  adminGetDashboard: () => apiClient.get("/admin/dashboard.php"),
 
   adminGetContacts: (params = {}) => apiClient.get("/admin/contacts.php", { params }),
   adminGetContactById: (id) => apiClient.get("/admin/contacts.php", { params: { id } }),
@@ -60,29 +58,36 @@ export const api = {
   adminGetSettings: () => apiClient.get("/admin/settings.php"),
   adminUpdateSettings: (payload) => apiClient.put("/admin/settings.php", payload),
 
+  adminGetReviews: (params = {}) => apiClient.get("/admin/reviews.php", { params }),
+  adminGetReviewById: (id) => apiClient.get("/admin/reviews.php", { params: { id } }),
+  adminUpdateReview: (id, payload) => apiClient.put("/admin/reviews.php", payload, { params: { id } }),
+
+  adminGetReturns: (params = {}) => apiClient.get("/admin/returns.php", { params }),
+  adminGetReturnById: (id) => apiClient.get("/admin/returns.php", { params: { id } }),
+  adminUpdateReturn: (id, payload) => apiClient.put("/admin/returns.php", payload, { params: { id } }),
+
   createOrder: (payload) => apiClient.post("/orders.php", payload),
   getUserOrders: ({ email, customerId } = {}) => {
     const params = {};
     const rawCustomerId = customerId !== undefined && customerId !== null ? String(customerId).trim() : "";
     if (rawCustomerId) {
-      // Accept numeric ids directly and tolerate labels like "CUS-101".
       if (/^\d+$/.test(rawCustomerId)) {
         params.customerId = rawCustomerId;
       } else {
         const fallbackMatch = rawCustomerId.match(/(\d+)/);
-        if (fallbackMatch) {
-          params.customerId = fallbackMatch[1];
-        }
+        if (fallbackMatch) params.customerId = fallbackMatch[1];
       }
     }
-    if (email) {
-      params.email = String(email).trim().toLowerCase();
-    }
+    if (email) params.email = String(email).trim().toLowerCase();
     return apiClient.get("/orders.php", { params });
   },
 
+  getReturns: (params = {}) => apiClient.get("/returns.php", { params }),
+  submitReturn: (payload) => apiClient.post("/returns.php", payload),
+  cancelReturnRequest: (id, payload = {}) => apiClient.patch("/returns.php", payload, { params: { id } }),
+
   submitContact: (payload) => apiClient.post("/contacts.php", payload),
-  
+
   getProfile: (email) => apiClient.get("/profile.php", { params: { email } }),
   updateProfile: (payload) => apiClient.post("/profile.php", payload),
   getAddressSuggestions: (email) => apiClient.get("/address-suggestions.php", { params: { email } }),
@@ -94,14 +99,10 @@ export const api = {
         params.customerId = rawCustomerId;
       } else {
         const fallbackMatch = rawCustomerId.match(/(\d+)/);
-        if (fallbackMatch) {
-          params.customerId = fallbackMatch[1];
-        }
+        if (fallbackMatch) params.customerId = fallbackMatch[1];
       }
     }
-    if (email) {
-      params.email = String(email).trim().toLowerCase();
-    }
+    if (email) params.email = String(email).trim().toLowerCase();
     return apiClient.get("/addresses.php", { params });
   },
   createAddress: (payload) => apiClient.post("/addresses.php", payload),
@@ -112,7 +113,9 @@ export const api = {
     formData.append("file", file);
     formData.append("folder", "profiles");
     return apiClient.post("/admin/upload.php", formData);
-  }
+  },
+  getReviews: (productId) => apiClient.get("/reviews.php", { params: { productId } }),
+  addReview: (payload) => apiClient.post("/reviews.php", payload),
 };
 
 export default api;
