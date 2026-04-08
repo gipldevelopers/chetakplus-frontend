@@ -12,6 +12,7 @@ import {
   MessageSquare,
   Package,
   Receipt,
+  RefreshCcw,
   Search,
   Settings,
   Sparkles,
@@ -43,6 +44,7 @@ const navItems = [
   { label: "Orders", to: "/admin/orders", icon: Receipt },
   { label: "Customers", to: "/admin/customers", icon: Users },
   { label: "Reviews", to: "/admin/reviews", icon: Star },
+  { label: "Returns", to: "/admin/returns", icon: RefreshCcw },
   { label: "Payments", to: "/admin/payments", icon: CreditCard },
   { label: "Contacts", to: "/admin/contacts", icon: Contact },
   { label: "Settings", to: "/admin/settings", icon: Settings },
@@ -205,7 +207,10 @@ const AdminLayout = () => {
                     <DropdownMenuLabel className="text-xs uppercase tracking-[0.16em] text-slate-400">Notifications</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {adminNotifications.map((notification) => (
-                      <DropdownMenuItem key={notification.id} className="flex cursor-pointer flex-col items-start gap-1 py-3">
+                      <DropdownMenuItem
+                        key={notification.id}
+                        className="flex cursor-pointer flex-col items-start gap-1 rounded-lg px-3 py-3 transition-colors hover:bg-slate-50 data-[highlighted]:!bg-slate-50 data-[highlighted]:!text-slate-900 focus:!bg-slate-50 focus:!text-slate-900"
+                      >
                         <p className="text-sm font-medium text-slate-700">{notification.title}</p>
                         <p className="text-xs text-slate-500">{notification.time}</p>
                       </DropdownMenuItem>
