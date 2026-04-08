@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { Mail, ArrowLeft } from "lucide-react";
@@ -13,6 +13,9 @@ const ForgotPassword = () => {
   const [mailDispatched, setMailDispatched] = useState(true);
   const [resetLink, setResetLink] = useState("");
   const [mailError, setMailError] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
+  const [expiresInMinutes, setExpiresInMinutes] = useState(15);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const redirectTarget = (() => {
     const fromQuery = new URLSearchParams(location.search).get("redirect") || "";
@@ -21,6 +24,7 @@ const ForgotPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (resendCooldown > 0) return;
     setIsLoading(true);
 
     try {
@@ -30,6 +34,9 @@ const ForgotPassword = () => {
       setMailDispatched(Boolean(response?.mailDispatched));
       setResetLink(String(response?.resetLink || ""));
       setMailError(String(response?.mailError || ""));
+      setInfoMessage(String(response?.message || ""));
+      setExpiresInMinutes(Number(response?.expiresInMinutes || 15));
+      setResendCooldown(Math.max(0, Number(response?.resendCooldownSeconds || 60)));
 
       if (response?.mailDispatched) {
         toast.success(response.message || "Password reset instructions sent.");
@@ -40,9 +47,35 @@ const ForgotPassword = () => {
       }
     } catch (error) {
       setIsLoading(false);
-      toast.error(error?.message || "Unable to process forgot password request.");
+      if (error?.status === 404) {
+        toast.error(error?.message || "Email not registered");
+      } else if (error?.status === 429) {
+        const retryAfterSeconds = Math.max(
+          1,
+          Number(
+            error?.body?.meta?.retryAfterSeconds
+              || (Number(error?.body?.meta?.retryAfterMinutes || 1) * 60),
+          ),
+        );
+        const retryAfterMinutes = Math.max(1, Math.ceil(retryAfterSeconds / 60));
+        const retryLabel = retryAfterSeconds < 60
+          ? `${retryAfterSeconds} second${retryAfterSeconds === 1 ? "" : "s"}`
+          : `${retryAfterMinutes} minute${retryAfterMinutes === 1 ? "" : "s"}`;
+        setResendCooldown(retryAfterSeconds);
+        toast.error(`Too many reset attempts. Please try again in ${retryLabel}.`);
+      } else {
+        toast.error(error?.message || "Unable to process forgot password request.");
+      }
     }
   };
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return undefined;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-background">
@@ -173,16 +206,24 @@ const ForgotPassword = () => {
                     ) : null}
                   </div>
                 )}
+                <p className="text-[11px] text-muted-foreground mb-3">
+                  {infoMessage || "Reset link sent."} Link expires in {expiresInMinutes} minutes.
+                </p>
                 <button
                   onClick={() => {
+                    if (resendCooldown > 0) return;
                     setIsSubmitted(false);
                     setResetLink("");
                     setMailError("");
                     setMailDispatched(true);
+                    setInfoMessage("");
                   }}
-                  className="text-sm font-medium text-primary hover:underline"
+                  className="text-sm font-medium text-primary hover:underline disabled:opacity-50"
+                  disabled={resendCooldown > 0}
                 >
-                  Didn't receive the email? Try again.
+                  {resendCooldown > 0
+                    ? `Resend available in ${resendCooldown}s`
+                    : "Didn't receive the email? Try again."}
                 </button>
               </div>
             )}
