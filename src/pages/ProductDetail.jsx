@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
-import { Star, Minus, Plus, ShoppingBag, Heart, Truck, Shield, RotateCcw, Lock, GraduationCap, Briefcase, Target, PenTool, Layers, BookHeart, Gem, Share2, Facebook, Twitter } from "lucide-react";
+import { useParams, Link, useLocation } from "react-router-dom";
+import { Star, Minus, Plus, ShoppingBag, Heart, Truck, Shield, RotateCcw, Lock, GraduationCap, Briefcase, Target, PenTool, Layers, BookHeart, Gem, Share2, Facebook, Twitter, MessageSquare, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useData } from "@/context/DataContext";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import { useAuth } from "@/context/AuthContext";
+import api from "@/api";
+import { toast } from "sonner";
 import ProductCard from "@/components/ProductCard";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
@@ -40,6 +43,13 @@ const ProductDetail = () => {
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [showStickyBar, setShowStickyBar] = useState(false);
 
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, title: "", comment: "" });
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const { user } = useAuth();
+  const location = useLocation();
+
   // Track recently viewed
   useEffect(() => {
     if (!product || !products) return;
@@ -71,10 +81,24 @@ const ProductDetail = () => {
   useEffect(() => {
     setSelectedImage(0);
     setQuantity(1);
-    setActiveTab("description");
     setSelectedVariants({});
+    
+    if (location.hash === "#reviews") {
+      setActiveTab("reviews");
+    } else {
+      setActiveTab("description");
+    }
+
+    if (product) {
+      setReviewsLoading(true);
+      api.getReviews(product.id)
+        .then(data => setReviews(Array.isArray(data) ? data : []))
+        .catch(err => console.error(err))
+        .finally(() => setReviewsLoading(false));
+    }
+
     window.scrollTo(0, 0);
-  }, [slug]);
+  }, [slug, product, location.hash]);
 
   if (!product) {
     return (
@@ -94,7 +118,9 @@ const ProductDetail = () => {
   const tabs = [
     { id: "description", label: "Description" },
     { id: "features", label: "Features" },
-    { id: "specifications", label: "Specifications" }];
+    { id: "specifications", label: "Specifications" },
+    { id: "reviews", label: `Reviews (${reviews.length})` }
+  ];
 
 
   const perfectForIcons = {
@@ -419,12 +445,104 @@ const ProductDetail = () => {
             }
             {activeTab === "specifications" &&
               <div className="max-w-md space-y-0">
-                {Object.entries(product.specifications).map(([key, value]) =>
+                {product.specifications && Object.entries(product.specifications).map(([key, value]) =>
                   <div key={key} className="flex py-3 border-b border-border last:border-0">
                     <span className="text-sm font-medium text-foreground w-40 shrink-0">{key}</span>
                     <span className="text-sm text-muted-foreground">{value}</span>
                   </div>
                 )}
+              </div>
+            }
+
+            {activeTab === "reviews" &&
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500" id="reviews">
+                <div>
+                  <h3 className="text-xl font-bold font-display mb-6">Customer Reviews</h3>
+                  {reviewsLoading ? (
+                    <div className="flex items-center gap-2 text-muted-foreground py-6"><Loader2 className="animate-spin" size={20} /> Loading reviews...</div>
+                  ) : reviews.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {reviews.map(r => (
+                        <div key={r.id} className="p-5 rounded-2xl border border-border bg-card shadow-sm hover:border-primary/20 transition-all">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <div className="flex gap-0.5 text-amber-500 mb-2">
+                                {[...Array(5)].map((_, i) => <Star key={i} size={14} className={i < r.rating ? "fill-amber-500" : "text-amber-200"} />)}
+                              </div>
+                              {r.title && <p className="font-bold text-sm text-foreground">{r.title}</p>}
+                            </div>
+                            <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">{new Date(r.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground leading-relaxed">"{r.comment}"</p>
+                          <div className="mt-4 pt-4 border-t border-border flex items-center gap-2">
+                             <div className="w-6 h-6 rounded-full bg-secondary text-primary flex items-center justify-center text-xs font-bold">{r.customerName.charAt(0).toUpperCase()}</div>
+                             <p className="text-xs font-semibold text-foreground">{r.customerName} <span className="text-emerald-600 font-normal ml-1">✓ Verified</span></p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center bg-secondary/30 rounded-2xl border border-dashed border-border">
+                       <MessageSquare className="mx-auto text-muted-foreground mb-3" size={24} />
+                       <p className="text-sm text-muted-foreground max-w-sm mx-auto">No reviews yet. Share your experience and be the first to write a review!</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-card p-6 md:p-8 rounded-2xl border border-border shadow-sm max-w-2xl">
+                  <h4 className="text-lg font-bold font-display mb-1">Write a Review</h4>
+                  <p className="text-xs text-muted-foreground mb-6">Your feedback helps others make better choices.</p>
+                  
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    setReviewSubmitting(true);
+                    try {
+                      const payload = {
+                        productId: product.id,
+                        customerName: user?.name || "Verified Customer",
+                        rating: reviewForm.rating,
+                        title: reviewForm.title,
+                        comment: reviewForm.comment
+                      };
+                      await api.addReview(payload);
+                      toast.success("Review submitted successfully!");
+                      setReviewForm({ rating: 5, title: "", comment: "" });
+                      const data = await api.getReviews(product.id);
+                      setReviews(Array.isArray(data) ? data : []);
+                    } catch(err) {
+                      toast.error(err?.message || "Failed to submit review");
+                    } finally {
+                      setReviewSubmitting(false);
+                    }
+                  }} className="space-y-5">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest mb-2 text-muted-foreground">Rating</label>
+                      <div className="flex items-center gap-1.5 cursor-pointer">
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <button 
+                            type="button"
+                            key={star} 
+                            onClick={() => setReviewForm(prev => ({...prev, rating: star}))} 
+                            className="p-1 hover:scale-110 transition-transform focus:outline-none"
+                          >
+                            <Star size={24} className={star <= reviewForm.rating ? "fill-amber-500 text-amber-500 shadow-sm rounded-full" : "text-border hover:text-amber-300 transition-colors"} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest mb-2 text-muted-foreground">Title (Optional)</label>
+                      <input value={reviewForm.title} onChange={e => setReviewForm(prev => ({...prev, title: e.target.value}))} className="w-full h-11 px-4 rounded-xl border border-border text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-background" placeholder="Summarize your experience" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest mb-2 text-muted-foreground">Your Review</label>
+                      <textarea value={reviewForm.comment} onChange={e => setReviewForm(prev => ({...prev, comment: e.target.value}))} className="w-full p-4 rounded-xl border border-border text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-background resize-y min-h-[100px]" placeholder="What did you love about this product?" required />
+                    </div>
+                    <button disabled={reviewSubmitting} className="w-full sm:w-auto px-8 h-11 bg-primary text-primary-foreground font-bold uppercase tracking-widest rounded-xl text-xs transition-all hover:-translate-y-0.5 shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2">
+                      {reviewSubmitting ? <Loader2 className="animate-spin" size={16} /> : <><MessageSquare size={16} /> Submit Review</>}
+                    </button>
+                  </form>
+                </div>
               </div>
             }
 
