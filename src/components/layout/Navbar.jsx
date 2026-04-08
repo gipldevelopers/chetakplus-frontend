@@ -62,6 +62,10 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const userDisplayName = user?.name || user?.displayName || "";
+  const profilePhoto = user?.photoURL || user?.picture || "";
+  const userInitial = (userDisplayName || user?.email || "U").charAt(0).toUpperCase();
+  const userFirstName = userDisplayName.split(" ")[0] || user?.email?.split("@")[0] || "Account";
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -139,14 +143,14 @@ const Navbar = () => {
               <div className="relative group">
                 <Link to="/profile" className="flex items-center gap-2 p-1.5 pr-3 rounded-full hover:bg-secondary transition-all">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 overflow-hidden">
-                    {user.photoURL ? (
-                      <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
+                    {profilePhoto ? (
+                      <img src={profilePhoto} alt={userDisplayName || "User"} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-xs font-bold">{user.name?.charAt(0).toUpperCase()}</span>
+                      <span className="text-xs font-bold">{userInitial}</span>
                     )}
                   </div>
                   <span className="hidden sm:block text-[13px] font-bold text-foreground truncate max-w-[80px]">
-                    {user.name?.split(' ')[0]}
+                    {userFirstName}
                   </span>
                 </Link>
                 
