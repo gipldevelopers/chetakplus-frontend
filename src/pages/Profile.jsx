@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Heart, Loader2, LogOut, MapPin, Package, Settings, Trash2 } from "lucide-react";
+import { ArrowLeftRight, Heart, Loader2, LogOut, MapPin, Package, RefreshCcw, Settings, Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/api";
 import { useAuth } from "@/context/AuthContext";
@@ -9,6 +9,15 @@ import { useData } from "@/context/DataContext";
 
 const ORDERS_UPDATED_AT_KEY = "chetakplus.orders.updatedAt";
 const formatCurrency = (value) => `Rs ${Number(value || 0).toLocaleString("en-IN")}`;
+const RETURN_REASONS = [
+  { value: "damaged_product", label: "Damaged product" },
+  { value: "wrong_item_received", label: "Wrong item received" },
+  { value: "size_issue", label: "Size issue" },
+  { value: "quality_not_as_expected", label: "Quality not as expected" },
+  { value: "missing_item", label: "Missing item" },
+  { value: "other", label: "Other" },
+];
+const RETURN_IMAGE_REQUIRED_REASONS = new Set(["damaged_product", "wrong_item_received"]);
 
 const defaultAddressForm = {
   addressType: "home",
@@ -47,6 +56,22 @@ const Profile = () => {
   const [editingAddressId, setEditingAddressId] = useState(null);
   const [addressSaving, setAddressSaving] = useState(false);
   const previousOrdersRef = useRef({});
+  const [activeReturnDraft, setActiveReturnDraft] = useState(null);
+  const [returnForm, setReturnForm] = useState({
+    reasonCode: "damaged_product",
+    reasonText: "",
+    comment: "",
+    exchangePreference: "",
+    evidenceFiles: [],
+    bankDetails: {
+      accountHolderName: "",
+      bankName: "",
+      accountNumber: "",
+      ifscCode: "",
+    },
+  });
+  const [returnSubmitting, setReturnSubmitting] = useState(false);
+  const [evidenceUploading, setEvidenceUploading] = useState(false);
 
   const [ordersPage, setOrdersPage] = useState(1);
   const [wishlistPage, setWishlistPage] = useState(1);
@@ -192,11 +217,150 @@ const Profile = () => {
     };
   }, [user?.id, tab, fetchOrders]);
 
+  useEffect(() => {
+    if (tab !== "orders" || !searchParams.get("id")) {
+      setActiveReturnDraft(null);
+    }
+  }, [tab, searchParams]);
+
   if (!user) return null;
 
   const resetAddressForm = () => {
     setAddressForm({ ...defaultAddressForm, fullName: profileData.name, phone: profileData.phone });
     setEditingAddressId(null);
+  };
+
+  const resetReturnForm = () => {
+    setReturnForm({
+      reasonCode: "damaged_product",
+      reasonText: "",
+      comment: "",
+      exchangePreference: "",
+      evidenceFiles: [],
+      bankDetails: {
+        accountHolderName: profileData.name || user?.name || "",
+        bankName: "",
+        accountNumber: "",
+        ifscCode: "",
+      },
+    });
+  };
+
+  const openReturnDraft = (order, item, actionType) => {
+    setActiveReturnDraft({
+      orderId: order.id,
+      orderItemId: item.itemId,
+      actionType,
+      paymentMethod: String(order.paymentMethod || "Cash on Delivery"),
+      itemName: item.name || "Item",
+    });
+    resetReturnForm();
+  };
+
+  const applyReturnRequestToOrderItem = (orderId, orderItemId, request) => {
+    setOrders((prev) =>
+      prev.map((order) => {
+        if (String(order.id) !== String(orderId)) return order;
+        return {
+          ...order,
+          items: (order.items || []).map((item) =>
+            Number(item.itemId) === Number(orderItemId)
+              ? {
+                  ...item,
+                  returnRequest: request || item.returnRequest,
+                  returnEligible: false,
+                }
+              : item
+          ),
+        };
+      })
+    );
+  };
+
+  const uploadEvidenceFiles = async (files) => {
+    if (!files?.length) return [];
+    setEvidenceUploading(true);
+    try {
+      const uploads = await Promise.all(
+        files.map((file) => api.adminUploadMedia(file, { folder: "returns" }))
+      );
+      return uploads.map((entry) => entry?.url).filter(Boolean);
+    } finally {
+      setEvidenceUploading(false);
+    }
+  };
+
+  const submitReturnRequest = async () => {
+    if (!activeReturnDraft) return;
+
+    const needsProof = RETURN_IMAGE_REQUIRED_REASONS.has(returnForm.reasonCode);
+    if (returnForm.reasonCode === "other" && !String(returnForm.reasonText || "").trim()) {
+      toast.error("Please add custom reason details.");
+      return;
+    }
+    if (needsProof && (!returnForm.evidenceFiles || returnForm.evidenceFiles.length === 0)) {
+      toast.error("Please upload image proof for this reason.");
+      return;
+    }
+
+    const isReturn = activeReturnDraft.actionType === "return";
+    const isUpi = String(activeReturnDraft.paymentMethod || "").toLowerCase() === "upi";
+    const needsBankDetails = isReturn && !isUpi;
+
+    if (needsBankDetails) {
+      const bank = returnForm.bankDetails;
+      if (!bank.accountHolderName || !bank.bankName || !bank.accountNumber || !bank.ifscCode) {
+        toast.error("Please fill bank details for COD refund.");
+        return;
+      }
+    }
+
+    setReturnSubmitting(true);
+    try {
+      const evidenceImages = await uploadEvidenceFiles(returnForm.evidenceFiles || []);
+      const payload = {
+        orderId: activeReturnDraft.orderId,
+        orderItemId: activeReturnDraft.orderItemId,
+        customerId: user?.id,
+        email: user?.email,
+        actionType: activeReturnDraft.actionType,
+        reasonCode: returnForm.reasonCode,
+        reasonText: returnForm.reasonCode === "other" ? returnForm.reasonText : "",
+        comment: returnForm.comment,
+        evidenceImages,
+      };
+
+      if (activeReturnDraft.actionType === "exchange" && returnForm.exchangePreference) {
+        payload.exchangeOptions = { preference: returnForm.exchangePreference };
+      }
+
+      if (needsBankDetails) {
+        payload.bankDetails = returnForm.bankDetails;
+      }
+
+      const created = await api.submitReturn(payload);
+      applyReturnRequestToOrderItem(activeReturnDraft.orderId, activeReturnDraft.orderItemId, created);
+      toast.success(`${activeReturnDraft.actionType === "exchange" ? "Exchange" : "Return"} request submitted.`);
+      setActiveReturnDraft(null);
+    } catch (submitError) {
+      toast.error(submitError?.message || "Unable to submit request.");
+    } finally {
+      setReturnSubmitting(false);
+    }
+  };
+
+  const cancelReturnRequest = async (order, item) => {
+    if (!item?.returnRequest?.id) return;
+    try {
+      const updated = await api.cancelReturnRequest(item.returnRequest.id, {
+        customerId: user?.id,
+        email: user?.email,
+      });
+      applyReturnRequestToOrderItem(order.id, item.itemId, updated);
+      toast.success("Request cancelled.");
+    } catch (cancelError) {
+      toast.error(cancelError?.message || "Unable to cancel request.");
+    }
   };
 
   return (
@@ -229,7 +393,7 @@ const Profile = () => {
             searchParams.get("id") ? (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/50">
-                  <button 
+                  <button
                     onClick={() => {
                       const params = new URLSearchParams(searchParams);
                       params.delete("id");
@@ -248,7 +412,7 @@ const Profile = () => {
                 {(() => {
                   const order = orders.find(o => String(o.id) === searchParams.get("id"));
                   if (!order) return <div className="py-12 text-center text-muted-foreground text-sm">Order not found.</div>;
-                  
+
                   const orderStatus = (order.status || "placed").toLowerCase();
                   const paymentStatus = (order.paymentStatus || "pending").toLowerCase();
 
@@ -276,22 +440,219 @@ const Profile = () => {
                       <div className="space-y-4">
                         <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400">Order Items</h2>
                         <div className="border border-border rounded-xl divide-y divide-border overflow-hidden">
-                          {(order.items || []).map((item, idx) => (
-                            <div key={idx} className="p-4 flex items-center justify-between gap-4 bg-card/50">
-                              <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-secondary/30 rounded-lg flex items-center justify-center border border-border overflow-hidden">
-                                  {(item.images?.[0] || item.image) ? (
-                                    <img src={item.images?.[0] || item.image} alt={item.name} className="w-full h-full object-cover" />
-                                  ) : <Package size={20} className="text-muted-foreground" />}
+                          {(order.items || []).map((item, idx) => {
+                            const quantity = item.quantity || item.qty || 1;
+                            const image = item.imageUrl || item.image || item.images?.[0] || "/placeholder.svg";
+                            return (
+                              <div key={item.itemId || idx} className="p-4 bg-card/50 space-y-3">
+                                <div className="flex flex-wrap items-center justify-between gap-4">
+                                  <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-secondary/30 rounded-lg flex items-center justify-center border border-border overflow-hidden">
+                                      {image ? (
+                                        <img src={image} alt={item.name} className="w-full h-full object-cover" />
+                                      ) : <Package size={20} className="text-muted-foreground" />}
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-semibold">{item.name}</p>
+                                      <p className="text-xs text-muted-foreground">Qty: {quantity}</p>
+                                      {item.productMessage ? <p className="text-[10px] text-rose-600 mt-0.5">{item.productMessage}</p> : null}
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-sm font-bold">{formatCurrency((item.price || 0) * quantity)}</p>
+                                    {orderStatus === "delivered" && (() => {
+                                      let slug = item.product_slug || item.productSlug;
+                                      if (!slug) {
+                                        const matchProd = products.find(p => String(p.id) === String(item.product_id || item.productId));
+                                        if (matchProd) slug = matchProd.slug;
+                                      }
+                                      return slug ? (
+                                        <Link to={`/product/${slug}#reviews`} className="mt-1 inline-block text-[10px] text-primary font-bold uppercase tracking-wider hover:underline">
+                                          Write Review
+                                        </Link>
+                                      ) : null;
+                                    })()}
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className="text-sm font-semibold">{item.name}</p>
-                                  <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
-                                </div>
+
+                                {item.returnRequest ? (
+                                  <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                                    <span className="px-2 py-1 rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700 font-semibold uppercase tracking-wider">
+                                      {item.returnRequest.actionType === "exchange" ? "Exchange" : "Return"}: {item.returnRequest.status}
+                                    </span>
+                                    {item.returnRequest.canCancel ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => cancelReturnRequest(order, item)}
+                                        className="px-2 py-1 rounded-lg border border-rose-200 text-rose-600 font-semibold uppercase tracking-wider hover:bg-rose-50"
+                                      >
+                                        Cancel Request
+                                      </button>
+                                    ) : null}
+                                  </div>
+                                ) : item.returnEligible ? (
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => openReturnDraft(order, item, "return")}
+                                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-300 text-[10px] font-bold uppercase tracking-wider hover:bg-secondary"
+                                    >
+                                      <RefreshCcw size={12} /> Return
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => openReturnDraft(order, item, "exchange")}
+                                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-300 text-[10px] font-bold uppercase tracking-wider hover:bg-secondary"
+                                    >
+                                      <ArrowLeftRight size={12} /> Exchange
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                                    {item.returnEligibility?.message || order.returnEligibility?.message || "Return/Exchange unavailable"}
+                                  </p>
+                                )}
                               </div>
-                              <p className="text-sm font-bold">{formatCurrency((item.price || 0) * (item.quantity || 1))}</p>
+                            );
+                          })}
+                          {activeReturnDraft && String(activeReturnDraft.orderId) === String(order.id) ? (
+                            <div className="p-4 bg-secondary/20 space-y-3">
+                              <div className="flex items-center justify-between gap-3">
+                                <div>
+                                  <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                                    {activeReturnDraft.actionType === "exchange" ? "Exchange Request" : "Return Request"}
+                                  </p>
+                                  <p className="text-sm font-semibold">{activeReturnDraft.itemName}</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveReturnDraft(null)}
+                                  className="px-2.5 py-1 rounded-lg border border-slate-300 text-[10px] font-bold uppercase tracking-wider hover:bg-secondary"
+                                >
+                                  Close
+                                </button>
+                              </div>
+
+                              <div className="grid md:grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Reason</label>
+                                  <select
+                                    value={returnForm.reasonCode}
+                                    onChange={(event) => setReturnForm((prev) => ({ ...prev, reasonCode: event.target.value }))}
+                                    className="w-full h-10 rounded-lg border border-border px-3 text-sm bg-background"
+                                  >
+                                    {RETURN_REASONS.map((reason) => (
+                                      <option key={reason.value} value={reason.value}>{reason.label}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                                {activeReturnDraft.actionType === "exchange" ? (
+                                  <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Exchange Preference</label>
+                                    <input
+                                      value={returnForm.exchangePreference}
+                                      onChange={(event) => setReturnForm((prev) => ({ ...prev, exchangePreference: event.target.value }))}
+                                      className="w-full h-10 rounded-lg border border-border px-3 text-sm bg-background"
+                                      placeholder="Same product / variant details"
+                                    />
+                                  </div>
+                                ) : null}
+                              </div>
+
+                              {returnForm.reasonCode === "other" ? (
+                                <div>
+                                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Custom Reason</label>
+                                  <input
+                                    value={returnForm.reasonText}
+                                    onChange={(event) => setReturnForm((prev) => ({ ...prev, reasonText: event.target.value }))}
+                                    className="w-full h-10 rounded-lg border border-border px-3 text-sm bg-background"
+                                    placeholder="Please describe your reason"
+                                  />
+                                </div>
+                              ) : null}
+
+                              <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Comment (Optional)</label>
+                                <textarea
+                                  value={returnForm.comment}
+                                  onChange={(event) => setReturnForm((prev) => ({ ...prev, comment: event.target.value }))}
+                                  className="w-full rounded-lg border border-border px-3 py-2 text-sm bg-background"
+                                  rows={3}
+                                  placeholder="Add details for support team"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Image Proof</label>
+                                <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border cursor-pointer text-xs font-semibold hover:bg-background">
+                                  <UploadCloud size={14} />
+                                  Upload Images
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    className="hidden"
+                                    onChange={(event) => {
+                                      const files = Array.from(event.target.files || []);
+                                      setReturnForm((prev) => ({ ...prev, evidenceFiles: files }));
+                                    }}
+                                  />
+                                </label>
+                                {returnForm.evidenceFiles?.length ? (
+                                  <p className="text-[10px] text-muted-foreground mt-2">
+                                    {returnForm.evidenceFiles.length} file(s) selected.
+                                  </p>
+                                ) : null}
+                              </div>
+
+                              {activeReturnDraft.actionType === "return" && String(activeReturnDraft.paymentMethod || "").toLowerCase() !== "upi" ? (
+                                <div className="grid md:grid-cols-2 gap-3">
+                                  <input
+                                    value={returnForm.bankDetails.accountHolderName}
+                                    onChange={(event) => setReturnForm((prev) => ({ ...prev, bankDetails: { ...prev.bankDetails, accountHolderName: event.target.value } }))}
+                                    className="h-10 rounded-lg border border-border px-3 text-sm bg-background"
+                                    placeholder="Account Holder Name"
+                                  />
+                                  <input
+                                    value={returnForm.bankDetails.bankName}
+                                    onChange={(event) => setReturnForm((prev) => ({ ...prev, bankDetails: { ...prev.bankDetails, bankName: event.target.value } }))}
+                                    className="h-10 rounded-lg border border-border px-3 text-sm bg-background"
+                                    placeholder="Bank Name"
+                                  />
+                                  <input
+                                    value={returnForm.bankDetails.accountNumber}
+                                    onChange={(event) => setReturnForm((prev) => ({ ...prev, bankDetails: { ...prev.bankDetails, accountNumber: event.target.value } }))}
+                                    className="h-10 rounded-lg border border-border px-3 text-sm bg-background"
+                                    placeholder="Account Number"
+                                  />
+                                  <input
+                                    value={returnForm.bankDetails.ifscCode}
+                                    onChange={(event) => setReturnForm((prev) => ({ ...prev, bankDetails: { ...prev.bankDetails, ifscCode: event.target.value } }))}
+                                    className="h-10 rounded-lg border border-border px-3 text-sm bg-background uppercase"
+                                    placeholder="IFSC Code"
+                                  />
+                                </div>
+                              ) : null}
+
+                              <div className="flex flex-wrap items-center gap-2">
+                                <button
+                                  type="button"
+                                  disabled={returnSubmitting || evidenceUploading}
+                                  onClick={submitReturnRequest}
+                                  className="px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold uppercase tracking-wider disabled:opacity-50"
+                                >
+                                  {returnSubmitting || evidenceUploading ? "Submitting..." : "Submit Request"}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveReturnDraft(null)}
+                                  className="px-3 py-2 rounded-lg border border-slate-300 text-xs font-bold uppercase tracking-wider hover:bg-secondary"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             </div>
-                          ))}
+                          ) : null}
                           <div className="p-4 bg-secondary/10 space-y-2">
                             <div className="flex justify-between text-xs text-muted-foreground">
                               <span>Subtotal</span>
@@ -346,7 +707,7 @@ const Profile = () => {
                       {paginatedOrders.map((order) => {
                         const status = String(order.status || "placed").toLowerCase();
                         const paymentStatus = String(order.paymentStatus || "pending").toLowerCase();
-                        
+
                         return (
                           <div key={order.id} className="border border-border rounded-xl p-4 transition-all hover:border-primary/20 bg-card group">
                             <div className="flex flex-wrap justify-between items-start gap-2 mb-3">
@@ -379,11 +740,11 @@ const Profile = () => {
                                 </div>
                               </div>
                             ) : null}
-                            
+
                             <div className="mt-4 pt-4 border-t border-border/40 flex justify-between items-center">
                               <p className="text-base font-bold text-slate-900">{formatCurrency(order.amount)}</p>
-                              <Link 
-                                to={`/profile?tab=orders&id=${order.id}`} 
+                              <Link
+                                to={`/profile?tab=orders&id=${order.id}`}
                                 className="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-slate-900 text-white hover:bg-primary shadow-sm hover:shadow-primary/25 transition-all"
                               >
                                 View Details
@@ -480,10 +841,10 @@ const Profile = () => {
                       <div key={item.id} className="border border-border rounded-xl p-4 bg-card hover:border-primary/20 transition-all group relative">
                         <div className="flex gap-4">
                           <Link to={`/product/${item.slug}`} className="w-20 h-20 rounded-lg overflow-hidden border border-border flex-shrink-0">
-                            <img 
-                              src={item.images?.[0] || item.image || "/placeholder.svg"} 
-                              alt={item.name} 
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                            <img
+                              src={item.images?.[0] || item.image || "/placeholder.svg"}
+                              alt={item.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             />
                           </Link>
                           <div className="flex-1 flex flex-col justify-between min-w-0">
@@ -560,8 +921,8 @@ const Profile = () => {
                   <h1 className="text-2xl font-bold font-display">Saved Addresses</h1>
                   <p className="text-sm text-muted-foreground mt-1">Manage your delivery locations.</p>
                 </div>
-                <button 
-                  onClick={resetAddressForm} 
+                <button
+                  onClick={resetAddressForm}
                   className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground rounded-lg shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all"
                 >
                   <MapPin size={14} /> <span>Add New</span>
@@ -578,42 +939,42 @@ const Profile = () => {
                         <div key={addr.id} className={`border border-border rounded-xl p-4 transition-all hover:border-primary/20 bg-card group ${addr.isDefault ? 'ring-2 ring-primary ring-offset-2 ring-offset-card' : ''}`}>
                           <div className="flex justify-between items-start gap-2">
                             <div>
-                                <span className="text-[10px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded bg-secondary text-secondary-foreground mb-2 inline-block">
-                                  {addr.label || addr.addressType}
-                                </span>
-                                {addr.isDefault && <span className="ml-2 text-[10px] font-bold text-primary uppercase tracking-[0.15em]">Default</span>}
+                              <span className="text-[10px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded bg-secondary text-secondary-foreground mb-2 inline-block">
+                                {addr.label || addr.addressType}
+                              </span>
+                              {addr.isDefault && <span className="ml-2 text-[10px] font-bold text-primary uppercase tracking-[0.15em]">Default</span>}
                             </div>
                             <div className="flex gap-2">
-                              <button 
-                                onClick={() => { 
-                                  setEditingAddressId(addr.id); 
-                                  setAddressForm({ 
-                                    addressType: addr.addressType || "home", 
-                                    label: addr.label || "", 
-                                    fullName: addr.fullName || "", 
-                                    phone: addr.phone || "", 
-                                    addressLine: addr.addressLine || "", 
-                                    city: addr.city || "", 
-                                    state: addr.state || "", 
-                                    pincode: addr.pincode || "", 
-                                    landmark: addr.landmark || "", 
-                                    isDefault: Boolean(addr.isDefault) 
-                                  }); 
-                                }} 
+                              <button
+                                onClick={() => {
+                                  setEditingAddressId(addr.id);
+                                  setAddressForm({
+                                    addressType: addr.addressType || "home",
+                                    label: addr.label || "",
+                                    fullName: addr.fullName || "",
+                                    phone: addr.phone || "",
+                                    addressLine: addr.addressLine || "",
+                                    city: addr.city || "",
+                                    state: addr.state || "",
+                                    pincode: addr.pincode || "",
+                                    landmark: addr.landmark || "",
+                                    isDefault: Boolean(addr.isDefault)
+                                  });
+                                }}
                                 className="p-1.5 rounded-lg border border-border hover:bg-secondary transition-colors text-primary"
                               >
                                 <Settings size={14} />
                               </button>
-                              <button 
-                                onClick={async () => { 
-                                  try { 
-                                    await api.deleteAddress(addr.id, { customerId: user.id, email: user.email }); 
-                                    toast.success("Address deleted"); 
-                                    fetchAddresses(); 
-                                  } catch (error) { 
-                                    toast.error(error?.message || "Delete failed"); 
-                                  } 
-                                }} 
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await api.deleteAddress(addr.id, { customerId: user.id, email: user.email });
+                                    toast.success("Address deleted");
+                                    fetchAddresses();
+                                  } catch (error) {
+                                    toast.error(error?.message || "Delete failed");
+                                  }
+                                }}
                                 className="p-1.5 rounded-lg border border-border hover:bg-rose-50 transition-colors text-rose-600"
                               >
                                 <Trash2 size={14} />
