@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
@@ -27,6 +27,13 @@ const SignIn = () => {
     ? (redirectFromQuery || redirectFromState || "/shop")
     : "/shop";
 
+  useEffect(() => {
+    const resetSuccess = new URLSearchParams(location.search).get("reset");
+    if (resetSuccess === "success") {
+      toast.success("Password reset successful. Please sign in.");
+    }
+  }, [location.search]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -48,8 +55,20 @@ const SignIn = () => {
     } catch (error) {
       console.error("Sign in error:", error);
 
-      if (error?.status === 401) {
-        toast.error("Invalid email or password.");
+      if (error?.status === 429) {
+        const retryAfterSeconds = Number(error?.body?.meta?.retryAfterSeconds || 30);
+        const retryAfterMinutes = Math.max(1, Math.ceil(retryAfterSeconds / 60));
+        const retryLabel = retryAfterSeconds < 60
+          ? `${retryAfterSeconds} second${retryAfterSeconds === 1 ? "" : "s"}`
+          : `${retryAfterMinutes} minute${retryAfterMinutes === 1 ? "" : "s"}`;
+        toast.error(error?.message || `Too many attempts. Try again in ${retryLabel}.`);
+      } else if (error?.status === 401) {
+        const remaining = Number(error?.body?.meta?.remainingAttempts);
+        if (Number.isFinite(remaining) && remaining > 0) {
+          toast.error(`Invalid email or password. ${remaining} attempt${remaining === 1 ? "" : "s"} left.`);
+        } else {
+          toast.error("Invalid email or password.");
+        }
       } else if (error?.status === 422) {
         toast.error(error?.message || "Please enter valid sign in details.");
       } else {
