@@ -5,10 +5,38 @@ const AuthContext = createContext(undefined);
 const AUTH_USER_KEY = "chetakplus.auth.user";
 const AUTH_SESSION_KEY = "chetakplus.auth.session";
 
+const pickString = (...values) => {
+  for (const value of values) {
+    if (typeof value !== "string") continue;
+    const trimmed = value.trim();
+    if (trimmed) return trimmed;
+  }
+  return "";
+};
+
+const normalizeAuthUser = (rawUser) => {
+  if (!rawUser || typeof rawUser !== "object") return null;
+
+  const name = pickString(rawUser.name, rawUser.displayName);
+  const photoURL = pickString(rawUser.photoURL, rawUser.picture, rawUser.photo_url);
+
+  return {
+    ...rawUser,
+    id: rawUser.id != null ? String(rawUser.id) : "",
+    name,
+    displayName: pickString(rawUser.displayName, name),
+    email: pickString(rawUser.email).toLowerCase(),
+    phone: pickString(rawUser.phone),
+    address: pickString(rawUser.address),
+    photoURL,
+    picture: pickString(rawUser.picture, photoURL),
+  };
+};
+
 const parseStoredUser = (rawValue) => {
   if (!rawValue) return null;
   try {
-    return JSON.parse(rawValue);
+    return normalizeAuthUser(JSON.parse(rawValue));
   } catch (error) {
     return null;
   }
@@ -48,24 +76,27 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(userData));
+    const normalizedUser = normalizeAuthUser(userData);
+    if (!normalizedUser) return null;
+    setUser(normalizedUser);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(normalizedUser));
     sessionStorage.setItem(AUTH_SESSION_KEY, "1");
+    return normalizedUser;
   };
 
   const loginWithGoogle = (credential) => {
     try {
       const decoded = jwtDecode(credential);
       const userData = {
-        id: decoded.sub,
+        id: String(decoded.sub || ""),
         email: decoded.email,
         name: decoded.name,
+        photoURL: decoded.picture,
         picture: decoded.picture,
         provider: "google",
         displayName: decoded.name,
       };
-      login(userData);
-      return userData;
+      return login(userData);
     } catch (error) {
       console.error("Google login decode error:", error);
       return null;
@@ -84,7 +115,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateUser = (userData) => {
-    const newUser = { ...user, ...userData };
+    const newUser = normalizeAuthUser({ ...(user || {}), ...userData });
+    if (!newUser) return;
     setUser(newUser);
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(newUser));
     sessionStorage.setItem(AUTH_SESSION_KEY, "1");
