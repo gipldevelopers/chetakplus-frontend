@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
@@ -27,6 +27,20 @@ const SignUp = () => {
     if (fromQuery.startsWith("/")) return fromQuery;
     return "/shop";
   })();
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const prefillName = (searchParams.get("name") || "").trim();
+    const prefillEmail = (searchParams.get("email") || "").trim().toLowerCase();
+
+    if (!prefillName && !prefillEmail) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      name: prefillName || prev.name,
+      email: prefillEmail || prev.email,
+    }));
+  }, [location.search]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { X, Gift, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import offerImage from "@/assets/offer-popup.png";
 
 const OfferPopup = () => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
     // Check if the user has already seen the popup in this session
@@ -22,6 +25,32 @@ const OfferPopup = () => {
   const closePopup = () => {
     setIsOpen(false);
     sessionStorage.setItem("hasSeenOfferPopup", "true");
+  };
+
+  const deriveNameFromEmail = (email) => {
+    const localPart = email.split("@")[0] || "";
+    const cleaned = localPart.replace(/[._-]+/g, " ").trim();
+    if (!cleaned) return "";
+    return cleaned.replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) return;
+
+    const name = deriveNameFromEmail(normalizedEmail);
+
+    closePopup();
+
+    const params = new URLSearchParams();
+    params.set("email", normalizedEmail);
+    if (name) {
+      params.set("name", name);
+    }
+
+    navigate(`/signup?${params.toString()}`);
   };
 
   return (
@@ -79,11 +108,14 @@ const OfferPopup = () => {
                 Join our premium community today and get an exclusive discount on your first purchase of planners, notebooks, and more.
               </p>
 
-              <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); closePopup(); }}>
+              <form className="space-y-3" onSubmit={handleSubmit}>
                 <input
                   type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                   placeholder="Enter your email address"
                   className="w-full px-5 py-4 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+                  autoComplete="email"
                   required
                 />
                 <button
