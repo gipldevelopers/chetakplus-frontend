@@ -1,62 +1,62 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PageHeader, Panel, StatusBadge, Pagination } from "@/components/admin/AdminUi";
+import { PageHeader, Panel, StatusBadge } from "@/components/admin/AdminUi";
+import InfiniteScroll from "react-infinite-scroll-component";
 import api from "@/api";
 
 const ratingStars = (count) => "*".repeat(Math.max(0, count)) + "-".repeat(Math.max(0, 5 - count));
 
 const AdminReviews = () => {
-  const [reviews, setReviews] = useState([]);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
   const [error, setError] = useState("");
-  const itemsPerPage = 5;
 
-  useEffect(() => {
-    let isMounted = true;
+  const [items, setItems] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-    const loadReviews = async () => {
-      try {
-        const params = {};
-        if (statusFilter !== "all") params.status = statusFilter;
-        const data = await api.adminGetReviews(params);
-        if (!isMounted) return;
-        setReviews(Array.isArray(data) ? data : []);
-        setError("");
-      } catch (loadError) {
-        if (!isMounted) return;
-        setError(loadError?.message || "Unable to load reviews.");
-        setReviews([]);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
+  const fetchMoreData = async (reset = false) => {
+    if (loading && !reset) return;
 
     setLoading(true);
-    loadReviews();
-    return () => {
-      isMounted = false;
-    };
-  }, [statusFilter]);
+    const targetPage = reset ? 1 : page;
 
-  const totalPages = Math.max(1, Math.ceil(reviews.length / itemsPerPage));
-  const paginatedReviews = useMemo(
-    () => reviews.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
-    [reviews, currentPage, itemsPerPage]
-  );
+    try {
+      const params = { page: targetPage, limit: 10 };
+      if (statusFilter !== "all") params.status = statusFilter;
+
+      const data = await api.adminGetReviews(params);
+      setError("");
+
+      if (!data || data.length === 0) {
+        setHasMore(false);
+        if (reset) setItems([]);
+      } else {
+        setItems((prev) => reset ? data : [...prev, ...data]);
+        setPage((prev) => reset ? 2 : prev + 1);
+
+        if (data.length < 10) setHasMore(false);
+        else setHasMore(true);
+      }
+    } catch (loadError) {
+      setError(loadError?.message || "Unable to load reviews.");
+    }
+
+    setLoading(false);
+  };
 
   useEffect(() => {
-    if (currentPage > totalPages) setCurrentPage(totalPages);
-  }, [currentPage, totalPages]);
+    fetchMoreData(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
 
   const updateStatus = async (id, status) => {
     setSavingId(id);
     setError("");
     try {
       const updated = await api.adminUpdateReview(id, { status });
-      setReviews((prev) => prev.map((review) => (review.id === id ? updated : review)));
+      setItems((prev) => prev.map((review) => (review.id === id ? updated : review)));
     } catch (saveError) {
       setError(saveError?.message || "Unable to update review status.");
     } finally {
@@ -72,10 +72,7 @@ const AdminReviews = () => {
         actions={
           <select
             value={statusFilter}
-            onChange={(event) => {
-              setStatusFilter(event.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={(event) => setStatusFilter(event.target.value)}
             className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm"
           >
             <option value="all">All Status</option>
@@ -94,26 +91,36 @@ const AdminReviews = () => {
 
       <Panel className="overflow-hidden">
         <div className="overflow-x-auto">
-          <Table className="admin-table min-w-[980px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Comment</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
+          <InfiniteScroll
+            dataLength={items.length}
+            next={() => fetchMoreData(false)}
+            hasMore={hasMore}
+            loader={
+              <div className="py-4 text-center text-sm text-slate-500">
+                Loading...
+              </div>
+            }
+            endMessage={
+              items.length > 0 ? (
+                <div className="py-4 text-center text-sm text-slate-500">
+                  <b>No more reviews</b>
+                </div>
+              ) : null
+            }
+          >
+            <Table className="admin-table min-w-[980px]">
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-sm text-slate-500">
-                    Loading reviews...
-                  </TableCell>
+                  <TableHead>Product</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Rating</TableHead>
+                  <TableHead>Comment</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Action</TableHead>
                 </TableRow>
-              ) : paginatedReviews.length > 0 ? (
-                paginatedReviews.map((review) => (
+              </TableHeader>
+              <TableBody>
+                {items.map((review) => (
                   <TableRow key={review.id}>
                     <TableCell>{review.product}</TableCell>
                     <TableCell>{review.customer}</TableCell>
@@ -145,25 +152,19 @@ const AdminReviews = () => {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-sm text-slate-500">
-                    No reviews found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                ))}
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          totalItems={reviews.length}
-          itemsPerPage={itemsPerPage}
-        />
+                {!loading && items.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-8 text-center text-sm text-slate-500">
+                      No reviews found.
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
+          </InfiniteScroll>
+        </div>
       </Panel>
     </div>
   );
