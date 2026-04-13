@@ -7,48 +7,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import SearchModal from "@/components/SearchModal";
 import { useAuth } from "@/context/AuthContext";
 import { LogOut } from "lucide-react";
-
-
-const megaMenuData = {
-  // planners: [
-  // { name: "All Planners", href: "/category/planners" },
-  // { name: "Weekly Planners", href: "/shop?category=planners&type=weekly" },
-  // { name: "Daily Planners", href: "/shop?category=planners&type=daily" },
-  // { name: "Monthly Planners", href: "/shop?category=planners&type=monthly" },
-  // { name: "Study Planners", href: "/shop?category=planners&type=study" }],
-
-  notebooks: [
-  { name: "All Notebooks", href: "/category/notebooks" },
-  { name: "Spiral Notebooks", href: "/shop?category=notebooks&type=spiral" },
-  { name: "Hardbound Notebooks", href: "/shop?category=notebooks&type=hardbound" },
-  { name: "A4 Notebooks", href: "/shop?category=notebooks&type=a4" }],
-
-  journals: [
-  { name: "All Journals", href: "/category/journals" },
-  { name: "Gratitude Journals", href: "/shop?category=journals&type=gratitude" },
-  { name: "Productivity Journals", href: "/shop?category=journals&type=productivity" }],
-
-  office: [
-  { name: "All Office Stationery", href: "/category/office-stationery" },
-  { name: "Sticky Notes", href: "/shop?category=office-stationery&type=sticky" },
-  { name: "Desk Organizers", href: "/shop?category=office-stationery&type=organizers" },
-  { name: "Files & Folders", href: "/shop?category=office-stationery&type=files" }],
-
-  bundles: [
-  { name: "All Bundles", href: "/category/bundles" }]
-
-};
+import { useData } from "@/context/DataContext";
 
 const navLinks = [
-{ name: "Home", href: "/" },
-{ name: "Shop", href: "/shop", hasMega: true },
-{ name: "New Arrivals", href: "/shop?filter=new" },
-{ name: "Best Sellers", href: "/shop?filter=bestseller" },
-{ name: "Blog", href: "/blog" },
-{ name: "Corporate Orders", href: "/corporate" },
-{ name: "About", href: "/about" },
-{ name: "Contact", href: "/contact" }];
-
+  { name: "Home", href: "/" },
+  { name: "Categories", href: "/categories" },
+  { name: "Products", href: "/shop", hasMega: true },
+  { name: "New Arrivals", href: "/shop?filter=new" },
+  { name: "Best Sellers", href: "/shop?filter=bestseller" },
+  { name: "Blog", href: "/blog" },
+  { name: "Corporate Orders", href: "/corporate" },
+  { name: "About", href: "/about" },
+  { name: "Contact", href: "/contact" }
+];
 
 const Navbar = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -60,6 +31,7 @@ const Navbar = () => {
   const { totalItems, setIsCartOpen } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
   const { user, logout } = useAuth();
+  const { categories, products } = useData();
   const location = useLocation();
   const navigate = useNavigate();
   const userDisplayName = user?.name || user?.displayName || "";
@@ -101,7 +73,6 @@ const Navbar = () => {
             onClick={() => setIsMobileOpen(!isMobileOpen)}
             className="lg:hidden p-2 -ml-2 text-foreground"
             aria-label="Toggle menu">
-            
             {isMobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
 
@@ -112,26 +83,24 @@ const Navbar = () => {
 
           {/* Desktop nav */}
           <div className="hidden lg:flex items-center gap-5 xl:gap-7">
-            {navLinks.map((link) =>
-            <div
-              key={link.name}
-              className="relative"
-              onMouseEnter={link.hasMega ? handleMegaEnter : undefined}
-              onMouseLeave={link.hasMega ? handleMegaLeave : undefined}>
-              
+            {navLinks.map((link) => (
+              <div
+                key={link.name}
+                className="relative"
+                onMouseEnter={link.hasMega ? handleMegaEnter : undefined}
+                onMouseLeave={link.hasMega ? handleMegaLeave : undefined}>
                 <Link
-                to={link.href}
-                className={`text-sm font-medium tracking-wide transition-colors flex items-center gap-1 py-2 ${
-                location.pathname === link.href ?
-                "text-primary" :
-                "text-foreground/70 hover:text-foreground"}`
-                }>
-                
+                  to={link.href}
+                  className={`text-sm font-medium tracking-wide transition-colors flex items-center gap-1 py-2 ${
+                    location.pathname === link.href ?
+                    "text-primary" :
+                    "text-foreground/70 hover:text-foreground"
+                  }`}>
                   {link.name}
                   {link.hasMega && <ChevronDown size={14} />}
                 </Link>
               </div>
-            )}
+            ))}
           </div>
 
           {/* Right icons */}
@@ -180,7 +149,7 @@ const Navbar = () => {
             <Link to="/wishlist" className="relative p-2 text-foreground/70 hover:text-foreground transition-colors" aria-label="Wishlist">
               <Heart size={20} />
               {wishlistCount > 0 &&
-              <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
                   {wishlistCount}
                 </span>
               }
@@ -189,14 +158,12 @@ const Navbar = () => {
               onClick={() => setIsCartOpen(true)}
               className="relative p-2 text-foreground/70 hover:text-foreground transition-colors"
               aria-label="Cart">
-              
               <ShoppingBag size={20} />
               {totalItems > 0 &&
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
                   {totalItems}
                 </motion.span>
               }
@@ -208,38 +175,45 @@ const Navbar = () => {
       {/* Mega Menu */}
       <AnimatePresence>
         {megaOpen &&
-        <motion.div
-          ref={megaRef}
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.15 }}
-          className="hidden lg:block absolute left-0 right-0 bg-card border-b border-border shadow-lg z-40"
-          onMouseEnter={handleMegaEnter}
-          onMouseLeave={handleMegaLeave}>
-          
+          <motion.div
+            ref={megaRef}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+            className="hidden lg:block absolute left-0 right-0 bg-card border-b border-border shadow-lg z-40"
+            onMouseEnter={handleMegaEnter}
+            onMouseLeave={handleMegaLeave}>
             <div className="container-custom py-8">
               <div className="grid grid-cols-5 gap-8">
-                {Object.entries(megaMenuData).map(([key, items]) =>
-              <div key={key}>
+                {categories.map((category) => (
+                  <div key={category.slug}>
                     <h4 className="text-xs font-bold uppercase tracking-wider text-primary mb-3">
-                      {key === "office" ? "Office Stationery" : key.charAt(0).toUpperCase() + key.slice(1)}
+                      {category.name}
                     </h4>
                     <ul className="space-y-2">
-                      {items.map((item) =>
-                  <li key={item.name}>
-                          <Link
-                      to={item.href}
-                      className="text-sm text-foreground/70 hover:text-primary transition-colors flex items-center gap-1 group">
-                      
-                            <ChevronRight size={12} className="opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" />
-                            {item.name}
-                          </Link>
-                        </li>
-                  )}
+                      <li>
+                        <Link to={`/category/${category.slug}`} className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
+                          All {category.name}
+                        </Link>
+                      </li>
+                      {products
+                        .filter(p => p.categorySlug === category.slug)
+                        .slice(0, 4)
+                        .map(product => (
+                          <li key={product.id}>
+                            <Link
+                              to={`/product/${product.slug}`}
+                              className="text-sm text-foreground/70 hover:text-primary transition-colors flex items-center gap-1 group">
+                              <ChevronRight size={12} className="opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" />
+                              {product.name}
+                            </Link>
+                          </li>
+                        ))
+                      }
                     </ul>
                   </div>
-              )}
+                ))}
               </div>
               <div className="mt-6 pt-6 border-t border-border flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">Explore 100+ products across all categories</p>
@@ -255,12 +229,11 @@ const Navbar = () => {
       {/* Mobile menu */}
       <AnimatePresence>
         {isMobileOpen &&
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          className="lg:hidden border-t border-border bg-background overflow-hidden">
-          
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="lg:hidden border-t border-border bg-background overflow-hidden">
             <div className="container-custom py-4 max-h-[70vh] overflow-y-auto">
               {navLinks.map((link) => (
                 <div key={link.name} className="border-b border-border/30 last:border-0">
@@ -291,23 +264,36 @@ const Navbar = () => {
                             className="overflow-hidden"
                           >
                             <div className="pl-4 pb-3 space-y-4">
-                              {Object.entries(megaMenuData).map(([key, items]) => (
-                                <div key={key}>
+                              {categories.map((category) => (
+                                <div key={category.slug}>
                                   <h4 className="text-xs font-bold uppercase tracking-wider text-primary mb-2">
-                                    {key === "office" ? "Office Stationery" : key.charAt(0).toUpperCase() + key.slice(1)}
+                                    {category.name}
                                   </h4>
                                   <ul className="space-y-2">
-                                    {items.map((item) => (
-                                      <li key={item.name}>
-                                        <Link
-                                          to={item.href}
-                                          onClick={() => setIsMobileOpen(false)}
-                                          className="text-sm text-foreground/70 hover:text-primary transition-colors block py-1"
-                                        >
-                                          {item.name}
-                                        </Link>
-                                      </li>
-                                    ))}
+                                    <li>
+                                      <Link
+                                        to={`/category/${category.slug}`}
+                                        onClick={() => setIsMobileOpen(false)}
+                                        className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors block py-1"
+                                      >
+                                        All {category.name}
+                                      </Link>
+                                    </li>
+                                    {products
+                                      .filter(p => p.categorySlug === category.slug)
+                                      .slice(0, 3)
+                                      .map(product => (
+                                        <li key={product.id}>
+                                          <Link
+                                            to={`/product/${product.slug}`}
+                                            onClick={() => setIsMobileOpen(false)}
+                                            className="text-sm text-foreground/70 hover:text-primary transition-colors block py-1"
+                                          >
+                                            {product.name}
+                                          </Link>
+                                        </li>
+                                      ))
+                                    }
                                   </ul>
                                 </div>
                               ))}
@@ -332,8 +318,8 @@ const Navbar = () => {
         }
       </AnimatePresence>
       <SearchModal open={searchOpen} onOpenChange={setSearchOpen} />
-    </header>);
-
+    </header>
+  );
 };
 
 export default Navbar;
