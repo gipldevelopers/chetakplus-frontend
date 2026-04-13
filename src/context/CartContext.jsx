@@ -1,29 +1,22 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 
 const CartContext = createContext(undefined);
 
 export const CartProvider = ({ children }) => {
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState(() => {
+    const saved = localStorage.getItem("cart");
+    try {
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(items));
+  }, [items]);
 
   const addItem = useCallback((product, quantity = 1, variants) => {
     setItems((prev) => {

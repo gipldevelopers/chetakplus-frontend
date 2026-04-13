@@ -2,9 +2,12 @@ import { useCart } from "@/context/CartContext";
 import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const CartDrawer = () => {
   const { items, removeItem, updateQuantity, totalPrice, isCartOpen, setIsCartOpen } = useCart();
+  const { isAuthenticated } = useAuth();
+  const checkoutHref = isAuthenticated ? "/checkout" : "/signin?redirect=%2Fcheckout";
 
   return (
     <AnimatePresence>
@@ -95,7 +98,7 @@ const CartDrawer = () => {
                 </div>
                 <p className="text-xs text-muted-foreground">Shipping calculated at checkout</p>
                 <Link 
-                  to="/checkout" 
+                  to={checkoutHref}
                   onClick={() => setIsCartOpen(false)}
                   className="w-full bg-primary text-primary-foreground py-3.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity block text-center">
                   Checkout · ₹{totalPrice.toLocaleString()}

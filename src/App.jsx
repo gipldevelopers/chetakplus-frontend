@@ -11,6 +11,10 @@ import CartDrawer from "@/components/layout/CartDrawer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import ScrollToTop from "@/components/ScrollToTop";
 import OfferPopup from "@/components/OfferPopup";
+import { DataProvider } from "@/context/DataContext";
+import { AuthProvider } from "@/context/AuthContext";
+import { RequireAuth, GuestOnly } from "@/components/auth/AuthGuards";
+
 import Index from "./pages/Index";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
@@ -28,20 +32,48 @@ import Checkout from "./pages/Checkout";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import Profile from "./pages/Profile";
+
+
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminHeroList from "./pages/admin/AdminHeroList";
+import AdminHeroForm from "./pages/admin/AdminHeroForm";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminCategoryForm from "./pages/admin/AdminCategoryForm";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminAddProduct from "./pages/admin/AdminAddProduct";
+import AdminProductDetail from "./pages/admin/AdminProductDetail";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
+import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminCustomerDetail from "./pages/admin/AdminCustomerDetail";
+import AdminReviews from "./pages/admin/AdminReviews";
+import AdminReturns from "./pages/admin/AdminReturns";
+import AdminPayments from "./pages/admin/AdminPayments";
+import AdminPaymentDetail from "./pages/admin/AdminPaymentDetail";
+import AdminContacts from "./pages/admin/AdminContacts";
+import AdminContactDetail from "./pages/admin/AdminContactDetail";
+import AdminSettings from "./pages/admin/AdminSettings";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
   const location = useLocation();
-  const isAuthPage = ["/signin", "/signup", "/forgot-password"].includes(location.pathname);
+  const isAdmin = location.pathname.startsWith('/admin');
+  const isAuthPage = ["/signin", "/signup", "/forgot-password", "/reset-password", "/admin/login"].includes(location.pathname);
+  const hideCustomerUI = isAuthPage || isAdmin;
 
   return (
     <>
       <ScrollToTop />
-      {!isAuthPage && <Navbar />}
-      {!isAuthPage && <CartDrawer />}
-      {!isAuthPage && <WhatsAppButton />}
-      {!isAuthPage && <OfferPopup />}
+      {!hideCustomerUI && <Navbar />}
+      {!hideCustomerUI && <CartDrawer />}
+      {!hideCustomerUI && <WhatsAppButton />}
+      {!hideCustomerUI && <OfferPopup />}
       <main className="min-h-screen">
         <Routes>
           <Route path="/" element={<Index />} />
@@ -58,32 +90,75 @@ const AppContent = () => {
           <Route path="/privacy-policy" element={<PolicyPage />} />
           <Route path="/shipping-policy" element={<PolicyPage />} />
           <Route path="/refund-policy" element={<PolicyPage />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+
+          <Route element={<RequireAuth />}>
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
+
+          <Route element={<GuestOnly />}>
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+          </Route>
+
+
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="hero" element={<AdminHeroList />} />
+            <Route path="hero/new" element={<AdminHeroForm />} />
+            <Route path="hero/:heroId/edit" element={<AdminHeroForm />} />
+            <Route path="categories" element={<AdminCategories />} />
+            <Route path="categories/new" element={<AdminCategoryForm />} />
+            <Route path="categories/:categoryId/edit" element={<AdminCategoryForm />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="products/new" element={<AdminAddProduct />} />
+            <Route path="products/add" element={<AdminAddProduct />} />
+            <Route path="products/:id/edit" element={<AdminAddProduct />} />
+            <Route path="products/:id" element={<AdminProductDetail />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="orders/:orderId" element={<AdminOrderDetail />} />
+            <Route path="customers" element={<AdminCustomers />} />
+            <Route path="customers/:customerId" element={<AdminCustomerDetail />} />
+            <Route path="reviews" element={<AdminReviews />} />
+            <Route path="returns" element={<AdminReturns />} />
+            <Route path="payments" element={<AdminPayments />} />
+            <Route path="payments/:paymentId" element={<AdminPaymentDetail />} />
+            <Route path="contacts" element={<AdminContacts />} />
+            <Route path="contacts/:contactId" element={<AdminContactDetail />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
+          <Route path="/admin/login" element={<AdminLogin />} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      {!isAuthPage && <Footer />}
+      {!hideCustomerUI && <Footer />}
     </>
   );
 };
 
 const App = () =>
-<QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <CartProvider>
-        <WishlistProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
-        </WishlistProvider>
-      </CartProvider>
-    </TooltipProvider>
-  </QueryClientProvider>;
+  <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ""}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <DataProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <AppContent />
+                </BrowserRouter>
+              </DataProvider>
+            </WishlistProvider>
+          </CartProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </GoogleOAuthProvider>;
 
 
 export default App;

@@ -1,26 +1,81 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { Mail, ArrowLeft } from "lucide-react";
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import api from "@/api";
 
 const ForgotPassword = () => {
-  const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [mailDispatched, setMailDispatched] = useState(true);
+  const [resetLink, setResetLink] = useState("");
+  const [mailError, setMailError] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
+  const [expiresInMinutes, setExpiresInMinutes] = useState(15);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
-  const handleSubmit = (e) => {
+  const redirectTarget = (() => {
+    const fromQuery = new URLSearchParams(location.search).get("redirect") || "";
+    return fromQuery.startsWith("/") ? fromQuery : "/shop";
+  })();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (resendCooldown > 0) return;
     setIsLoading(true);
 
-    // Simulate sending password reset email
-    setTimeout(() => {
+    try {
+      const response = await api.authForgotPassword({ email: email.trim().toLowerCase() });
       setIsLoading(false);
       setIsSubmitted(true);
-      toast.success("Password reset instructions sent to your email!");
-    }, 1500);
+      setMailDispatched(Boolean(response?.mailDispatched));
+      setResetLink(String(response?.resetLink || ""));
+      setMailError(String(response?.mailError || ""));
+      setInfoMessage(String(response?.message || ""));
+      setExpiresInMinutes(Number(response?.expiresInMinutes || 15));
+      setResendCooldown(Math.max(0, Number(response?.resendCooldownSeconds || 60)));
+
+      if (response?.mailDispatched) {
+        toast.success(response.message || "Password reset instructions sent.");
+      } else if (response?.resetLink) {
+        toast.warning("Mail was not sent. Use the reset link shown on screen.");
+      } else {
+        toast.info(response?.message || "If the email exists, reset instructions will be sent.");
+      }
+    } catch (error) {
+      setIsLoading(false);
+      if (error?.status === 404) {
+        toast.error(error?.message || "Email not registered");
+      } else if (error?.status === 429) {
+        const retryAfterSeconds = Math.max(
+          1,
+          Number(
+            error?.body?.meta?.retryAfterSeconds
+              || (Number(error?.body?.meta?.retryAfterMinutes || 1) * 60),
+          ),
+        );
+        const retryAfterMinutes = Math.max(1, Math.ceil(retryAfterSeconds / 60));
+        const retryLabel = retryAfterSeconds < 60
+          ? `${retryAfterSeconds} second${retryAfterSeconds === 1 ? "" : "s"}`
+          : `${retryAfterMinutes} minute${retryAfterMinutes === 1 ? "" : "s"}`;
+        setResendCooldown(retryAfterSeconds);
+        toast.error(`Too many reset attempts. Please try again in ${retryLabel}.`);
+      } else {
+        toast.error(error?.message || "Unable to process forgot password request.");
+      }
+    }
   };
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return undefined;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-background">
@@ -107,20 +162,77 @@ const ForgotPassword = () => {
                   <Mail size={32} />
                 </div>
                 <h2 className="text-2xl font-bold text-foreground mb-3 font-display">Check your email</h2>
-                <p className="text-[13px] text-muted-foreground mb-8">
-                  We've sent password reset instructions to <br/><span className="font-medium text-foreground">{email}</span>
+                {mailDispatched ? (
+                  <p className="text-[13px] text-muted-foreground mb-8">
+                    We've sent password reset instructions to <br/><span className="font-medium text-foreground">{email}</span>
+                  </p>
+                ) : (
+                  <div className="text-left mb-8 space-y-3">
+                    <p className="text-[13px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                      Email was not delivered from server. Use this direct reset link for now.
+                    </p>
+                    {resetLink ? (
+                      <div className="space-y-2">
+                        <a
+                          href={resetLink}
+                          className="block text-xs break-all text-primary underline"
+                        >
+                          {resetLink}
+                        </a>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(resetLink);
+                              toast.success("Reset link copied");
+                            } catch {
+                              toast.error("Unable to copy link");
+                            }
+                          }}
+                          className="text-xs font-semibold text-primary hover:underline"
+                        >
+                          Copy reset link
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        No direct link was generated. Please try again.
+                      </p>
+                    )}
+                    {mailError ? (
+                      <p className="text-[11px] text-muted-foreground break-words">
+                        Mail error: {mailError}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+                <p className="text-[11px] text-muted-foreground mb-3">
+                  {infoMessage || "Reset link sent."} Link expires in {expiresInMinutes} minutes.
                 </p>
                 <button
-                  onClick={() => setIsSubmitted(false)}
-                  className="text-sm font-medium text-primary hover:underline"
+                  onClick={() => {
+                    if (resendCooldown > 0) return;
+                    setIsSubmitted(false);
+                    setResetLink("");
+                    setMailError("");
+                    setMailDispatched(true);
+                    setInfoMessage("");
+                  }}
+                  className="text-sm font-medium text-primary hover:underline disabled:opacity-50"
+                  disabled={resendCooldown > 0}
                 >
-                  Didn't receive the email? Try again.
+                  {resendCooldown > 0
+                    ? `Resend available in ${resendCooldown}s`
+                    : "Didn't receive the email? Try again."}
                 </button>
               </div>
             )}
 
             <div className="text-center mt-10">
-              <Link to="/signin" className="inline-flex items-center gap-2 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors group">
+              <Link
+                to={redirectTarget !== "/shop" ? `/signin?redirect=${encodeURIComponent(redirectTarget)}` : "/signin"}
+                className="inline-flex items-center gap-2 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors group"
+              >
                 <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back to Sign In
               </Link>
             </div>

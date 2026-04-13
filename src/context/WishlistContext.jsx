@@ -1,54 +1,85 @@
-import { createContext, useContext, useState, useEffect } from "react";
-
-
-
-
-
-
-
-
-
-
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
+import { toast } from "sonner";
 
 const WishlistContext = createContext(undefined);
 
+const getWishlistKey = (user) => {
+  if (user?.id) return `chetakplus-wishlist:${user.id}`;
+  if (user?.email) return `chetakplus-wishlist:${String(user.email).toLowerCase()}`;
+  return "chetakplus-wishlist:guest";
+};
+
+const parseStoredWishlist = (rawValue) => {
+  if (!rawValue) return [];
+  try {
+    const parsed = JSON.parse(rawValue);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
 export const WishlistProvider = ({ children }) => {
-  const [items, setItems] = useState(() => {
-    try {
-      const stored = localStorage.getItem("chetakplus-wishlist");
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const { user } = useAuth();
+  const { addItem: addToCart } = useCart();
+  const storageKey = useMemo(() => getWishlistKey(user), [user?.id, user?.email]);
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem("chetakplus-wishlist", JSON.stringify(items));
-  }, [items]);
+    const stored = localStorage.getItem(storageKey);
+    setItems(parseStoredWishlist(stored));
+  }, [storageKey]);
+
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify(items));
+  }, [storageKey, items]);
 
   const addItem = (product) => {
-    setItems((prev) => prev.find((p) => p.id === product.id) ? prev : [...prev, product]);
+    if (!product?.id) return;
+    setItems((prev) => (prev.find((p) => String(p.id) === String(product.id)) ? prev : [...prev, product]));
   };
 
   const removeItem = (productId) => {
-    setItems((prev) => prev.filter((p) => p.id !== productId));
+    setItems((prev) => prev.filter((p) => String(p.id) !== String(productId)));
   };
 
   const toggleItem = (product) => {
-    if (items.find((p) => p.id === product.id)) {
-      removeItem(product.id);
-    } else {
-      addItem(product);
-    }
+    if (!product?.id) return;
+    setItems((prev) =>
+      prev.find((p) => String(p.id) === String(product.id))
+        ? prev.filter((p) => String(p.id) !== String(product.id))
+        : [...prev, product]
+    );
   };
 
-  const isWished = (productId) => !!items.find((p) => p.id === productId);
+  const moveToCart = (product, quantity = 1) => {
+    if (!product?.id) return;
+    addToCart(product, quantity);
+    removeItem(product.id);
+    toast.success("Moved to cart");
+  };
+
+  const clearWishlist = () => setItems([]);
+  const isWished = (productId) => items.some((p) => String(p.id) === String(productId));
 
   return (
-    <WishlistContext.Provider value={{ items, addItem, removeItem, toggleItem, isWished, totalItems: items.length }}>
+    <WishlistContext.Provider
+      value={{
+        items,
+        addItem,
+        removeItem,
+        toggleItem,
+        moveToCart,
+        clearWishlist,
+        isWished,
+        totalItems: items.length,
+      }}
+    >
       {children}
-    </WishlistContext.Provider>);
-
+    </WishlistContext.Provider>
+  );
 };
 
 export const useWishlist = () => {
@@ -56,3 +87,4 @@ export const useWishlist = () => {
   if (!ctx) throw new Error("useWishlist must be used within WishlistProvider");
   return ctx;
 };
+

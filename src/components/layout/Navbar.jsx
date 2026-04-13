@@ -1,10 +1,13 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingBag, Menu, X, ChevronDown, Search, Heart, ChevronRight, User } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { motion, AnimatePresence } from "framer-motion";
 import SearchModal from "@/components/SearchModal";
+import { useAuth } from "@/context/AuthContext";
+import { LogOut } from "lucide-react";
+
 
 const megaMenuData = {
   // planners: [
@@ -56,7 +59,13 @@ const Navbar = () => {
   const megaTimeout = useRef();
   const { totalItems, setIsCartOpen } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
+  const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const userDisplayName = user?.name || user?.displayName || "";
+  const profilePhoto = user?.photoURL || user?.picture || "";
+  const userInitial = (userDisplayName || user?.email || "U").charAt(0).toUpperCase();
+  const userFirstName = userDisplayName.split(" ")[0] || user?.email?.split("@")[0] || "Account";
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -71,6 +80,11 @@ const Navbar = () => {
   };
   const handleMegaLeave = () => {
     megaTimeout.current = setTimeout(() => setMegaOpen(false), 150);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/signin", { replace: true });
   };
 
   return (
@@ -125,9 +139,44 @@ const Navbar = () => {
             <button onClick={() => setSearchOpen(true)} className="p-2 text-foreground/70 hover:text-foreground transition-colors" aria-label="Search">
               <Search size={20} />
             </button>
-            <Link to="/signin" className="p-2 text-foreground/70 hover:text-foreground transition-colors" aria-label="Sign In">
-              <User size={20} />
-            </Link>
+            {user ? (
+              <div className="relative group">
+                <Link to="/profile" className="flex items-center gap-2 p-1.5 pr-3 rounded-full hover:bg-secondary transition-all">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 overflow-hidden">
+                    {profilePhoto ? (
+                      <img src={profilePhoto} alt={userDisplayName || "User"} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xs font-bold">{userInitial}</span>
+                    )}
+                  </div>
+                  <span className="hidden sm:block text-[13px] font-bold text-foreground truncate max-w-[80px]">
+                    {userFirstName}
+                  </span>
+                </Link>
+                
+                {/* Simple Hover Dropdown */}
+                <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="bg-card border border-border rounded-xl shadow-xl p-2 min-w-[160px]">
+                    <Link to="/profile" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary text-[13px] font-medium text-foreground transition-colors">
+                      <User size={14} /> My Profile
+                    </Link>
+                    <Link to="/profile" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary text-[13px] font-medium text-foreground transition-colors">
+                      <ShoppingBag size={14} /> My Orders
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-50 text-[13px] font-medium text-red-500 transition-colors"
+                    >
+                      <LogOut size={14} /> Sign Out
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <Link to="/signin" className="p-2 text-foreground/70 hover:text-foreground transition-colors" aria-label="Sign In">
+                <User size={20} />
+              </Link>
+            )}
             <Link to="/wishlist" className="relative p-2 text-foreground/70 hover:text-foreground transition-colors" aria-label="Wishlist">
               <Heart size={20} />
               {wishlistCount > 0 &&
