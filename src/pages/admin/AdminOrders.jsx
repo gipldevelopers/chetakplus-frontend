@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PageHeader, Panel, StatusBadge, Pagination } from "@/components/admin/AdminUi";
+import { PageHeader, Panel, StatusBadge } from "@/components/admin/AdminUi";
+import InfiniteScroll from "react-infinite-scroll-component";
 import api from "@/api";
 
 const formatCurrency = (value) => `Rs ${Number(value || 0).toLocaleString("en-IN")}`;
@@ -14,70 +15,50 @@ const AdminOrders = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [methodFilter, setMethodFilter] = useState("all");
-  const [orders, setOrders] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
+  
+  const [items, setItems] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const itemsPerPage = 5;
 
-  useEffect(() => {
-    let isMounted = true;
+  const fetchMoreData = async (reset = false) => {
+    if (loading && !reset) return;
 
-    const loadOrders = async () => {
-      try {
-        const params = {};
-        if (statusFilter !== "all") params.status = statusFilter;
-        if (paymentFilter !== "all") params.paymentStatus = paymentFilter;
-        if (methodFilter !== "all") params.paymentMethod = methodFilter;
-        const data = await api.adminGetOrders(params);
-        if (!isMounted) return;
-        setOrders(Array.isArray(data) ? data : []);
-        setError("");
-      } catch (fetchError) {
-        if (!isMounted) return;
-        setError(fetchError?.message || "Unable to load orders.");
-        setOrders([]);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+    setLoading(true);
+    const targetPage = reset ? 1 : page;
+
+    try {
+      const params = { page: targetPage, limit: 10 };
+      if (statusFilter !== "all") params.status = statusFilter;
+      if (paymentFilter !== "all") params.paymentStatus = paymentFilter;
+      if (methodFilter !== "all") params.paymentMethod = methodFilter;
+      if (searchValue.trim() !== "") params.search = searchValue;
+
+      const data = await api.adminGetOrders(params);
+      setError("");
+
+      if (!data || data.length === 0) {
+        setHasMore(false);
+        if (reset) setItems([]);
+      } else {
+        setItems((prev) => reset ? data : [...prev, ...data]);
+        setPage((prev) => reset ? 2 : prev + 1);
+
+        if (data.length < 10) setHasMore(false);
+        else setHasMore(true);
       }
-    };
-
-    loadOrders();
-    const timer = setInterval(loadOrders, 15000);
-    return () => {
-      isMounted = false;
-      clearInterval(timer);
-    };
-  }, [statusFilter, paymentFilter, methodFilter]);
-
-  const filtered = useMemo(() => {
-    const token = searchValue.toLowerCase().trim();
-    if (!token) return orders;
-
-    return orders.filter(
-      (order) =>
-        String(order.id || "").toLowerCase().includes(token) ||
-        String(order.customerName || "").toLowerCase().includes(token)
-    );
-  }, [orders, searchValue]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchValue]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
-  const paginatedOrders = filtered.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
+    } catch (fetchError) {
+      setError(fetchError?.message || "Unable to load orders.");
     }
-  }, [currentPage, totalPages]);
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchMoreData(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchValue, statusFilter, paymentFilter, methodFilter]);
 
   return (
     <div className="space-y-6">
@@ -93,13 +74,13 @@ const AdminOrders = () => {
         <div className="border-b border-slate-200 p-4">
           <div className="grid gap-3 md:grid-cols-4">
             <div className="relative max-w-sm md:col-span-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
-              placeholder="Search by order ID or customer"
-              className="h-10 rounded-xl border-slate-200 bg-slate-50 pl-9"
-            />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+                placeholder="Search by order ID or customer"
+                className="h-10 rounded-xl border-slate-200 bg-slate-50 pl-9"
+              />
             </div>
             <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm">
               <option value="all">All Status</option>
@@ -122,26 +103,36 @@ const AdminOrders = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <Table className="admin-table min-w-[940px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Customer Name</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Payment Status</TableHead>
-                <TableHead>Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
+          <InfiniteScroll
+            dataLength={items.length}
+            next={() => fetchMoreData(false)}
+            hasMore={hasMore}
+            loader={
+              <div className="py-4 text-center text-sm text-slate-500">
+                Loading...
+              </div>
+            }
+            endMessage={
+              items.length > 0 ? (
+                <div className="py-4 text-center text-sm text-slate-500">
+                  <b>No more orders</b>
+                </div>
+              ) : null
+            }
+          >
+            <Table className="admin-table min-w-[940px]">
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-sm text-slate-500">
-                    Loading orders...
-                  </TableCell>
+                  <TableHead>Order ID</TableHead>
+                  <TableHead>Customer Name</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Payment Status</TableHead>
+                  <TableHead>Date</TableHead>
                 </TableRow>
-              ) : (
-                paginatedOrders.map((order) => (
+              </TableHeader>
+              <TableBody>
+                {items.map((order) => (
                   <TableRow key={order.id} onClick={() => navigate(`/admin/orders/${order.id}`)} className="cursor-pointer">
                     <TableCell className="font-semibold text-slate-800">{order.id}</TableCell>
                     <TableCell>{order.customerName}</TableCell>
@@ -154,27 +145,19 @@ const AdminOrders = () => {
                     </TableCell>
                     <TableCell className="text-slate-500">{order.date}</TableCell>
                   </TableRow>
-                ))
-              )}
+                ))}
 
-              {!loading && paginatedOrders.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-sm text-slate-500">
-                    No orders found.
-                  </TableCell>
-                </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
+                {!loading && items.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-8 text-center text-sm text-slate-500">
+                      No orders found.
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
+          </InfiniteScroll>
         </div>
-
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          totalItems={filtered.length}
-          itemsPerPage={itemsPerPage}
-        />
       </Panel>
     </div>
   );
