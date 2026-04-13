@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useMemo } from "react";
+import { Search } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { useData } from "@/context/DataContext";
@@ -10,18 +11,24 @@ const CategoryPage = () => {
   const category = categories.find((c) => c.slug === slug);
   const categoryProducts = getProductsByCategory(slug || "");
   const [sortBy, setSortBy] = useState("featured");
+  const [searchValue, setSearchValue] = useState("");
 
   const sorted = useMemo(() => {
     if (!categoryProducts) return [];
-    const result = [...categoryProducts];
+    let result = [...categoryProducts];
+
+    if (searchValue) {
+      const token = searchValue.toLowerCase();
+      result = result.filter((p) => p.name.toLowerCase().includes(token));
+    }
+
     switch (sortBy) {
       case "price-asc": result.sort((a, b) => a.price - b.price); break;
       case "price-desc": result.sort((a, b) => b.price - a.price); break;
-
       default: break;
     }
     return result;
-  }, [categoryProducts, sortBy]);
+  }, [categoryProducts, sortBy, searchValue]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -53,18 +60,30 @@ const CategoryPage = () => {
       </div>
 
       <div className="container-custom py-8 lg:py-12">
-        <div className="flex items-center justify-between mb-8">
-          <p className="text-sm text-muted-foreground">{sorted.length} products</p>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="max-w-[160px] text-sm border border-border rounded-xl px-3 py-2 bg-background text-foreground focus:outline-none">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+          <div className="relative w-full sm:max-w-xs">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search in this category..."
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 text-sm border border-border rounded-xl bg-background focus:outline-none focus:ring-1 focus:ring-primary/20"
+            />
+          </div>
 
-            <option value="featured">Featured</option>
-            <option value="price-asc">Price: Low to High</option>
-            <option value="price-desc">Price: High to Low</option>
-
-          </select>
+          <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+            <p className="text-sm text-muted-foreground">{sorted.length} products</p>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="max-w-[160px] text-sm border border-border rounded-xl px-3 py-2 bg-background text-foreground focus:outline-none"
+            >
+              <option value="featured">Featured</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+            </select>
+          </div>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {sorted.map((product, i) =>

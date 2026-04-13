@@ -4,67 +4,51 @@ import { Edit, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PageHeader, Panel, StatusBadge, Pagination } from "@/components/admin/AdminUi";
+import { PageHeader, Panel, StatusBadge } from "@/components/admin/AdminUi";
+import InfiniteScroll from "react-infinite-scroll-component";
 import api from "@/api";
-
-const ITEMS_PER_PAGE = 5;
 
 const AdminCategories = () => {
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState("");
-  const [categories, setCategories] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
+  
+  const [items, setItems] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let isMounted = true;
+  const fetchMoreData = async (reset = false) => {
+    if (loading && !reset) return;
 
-    const loadCategories = async () => {
-      try {
-        const data = await api.adminGetCategories();
-        if (!isMounted) return;
-        setCategories(Array.isArray(data) ? data : []);
-        setError("");
-      } catch (fetchError) {
-        if (!isMounted) return;
-        setError(fetchError?.message || "Unable to load categories.");
-        setCategories([]);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+    setLoading(true);
+    const targetPage = reset ? 1 : page;
+
+    try {
+      const data = await api.adminGetCategories({ page: targetPage, limit: 10, search: searchValue });
+      setError("");
+
+      if (!data || data.length === 0) {
+        setHasMore(false);
+        if (reset) setItems([]);
+      } else {
+        setItems((prev) => reset ? data : [...prev, ...data]);
+        setPage((prev) => reset ? 2 : prev + 1);
+
+        if (data.length < 10) setHasMore(false);
+        else setHasMore(true);
       }
-    };
+    } catch (fetchError) {
+      setError(fetchError?.message || "Unable to load categories.");
+    }
 
-    loadCategories();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const filtered = useMemo(() => {
-    const token = searchValue.toLowerCase().trim();
-    if (!token) return categories;
-
-    return categories.filter((category) => {
-      const name = String(category.name || "").toLowerCase();
-      const slug = String(category.slug || "").toLowerCase();
-      return name.includes(token) || slug.includes(token);
-    });
-  }, [categories, searchValue]);
-
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE)), [filtered.length]);
-  const paginatedCategories = useMemo(
-    () => filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE),
-    [filtered, currentPage],
-  );
+    setLoading(false);
+  };
 
   useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+    fetchMoreData(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchValue]);
 
   const removeCategory = async (id) => {
     const shouldDelete = window.confirm("Delete this category?");
@@ -72,7 +56,7 @@ const AdminCategories = () => {
 
     try {
       await api.adminDeleteCategory(id);
-      setCategories((prev) => prev.filter((item) => item.id !== id));
+      setItems((prev) => prev.filter((item) => item.id !== id));
     } catch (deleteError) {
       setError(deleteError?.message || "Unable to delete category.");
     }
@@ -110,10 +94,24 @@ const AdminCategories = () => {
           </div>
         </div>
 
-        {loading ? (
-          <div className="p-6 text-sm text-slate-500">Loading categories...</div>
-        ) : (
-          <div className="overflow-x-auto">
+        <div className="overflow-x-auto">
+          <InfiniteScroll
+            dataLength={items.length}
+            next={() => fetchMoreData(false)}
+            hasMore={hasMore}
+            loader={
+              <div className="py-4 text-center text-sm text-slate-500">
+                Loading...
+              </div>
+            }
+            endMessage={
+              items.length > 0 ? (
+                <div className="py-4 text-center text-sm text-slate-500">
+                  <b>No more categories</b>
+                </div>
+              ) : null
+            }
+          >
             <Table className="admin-table min-w-[900px]">
               <TableHeader>
                 <TableRow>
@@ -126,7 +124,7 @@ const AdminCategories = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedCategories.map((category) => (
+                {items.map((category) => (
                   <TableRow key={category.id}>
                     <TableCell>
                       <div className="h-12 w-16 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
@@ -171,7 +169,7 @@ const AdminCategories = () => {
                   </TableRow>
                 ))}
 
-                {paginatedCategories.length === 0 ? (
+                {!loading && items.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="py-8 text-center text-sm text-slate-500">
                       No categories found.
@@ -180,16 +178,8 @@ const AdminCategories = () => {
                 ) : null}
               </TableBody>
             </Table>
-          </div>
-        )}
-
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          totalItems={filtered.length}
-          itemsPerPage={ITEMS_PER_PAGE}
-        />
+          </InfiniteScroll>
+        </div>
       </Panel>
     </div>
   );
