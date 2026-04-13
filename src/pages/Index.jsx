@@ -564,34 +564,36 @@ const Index = () => {
       )}
 
       {/* Featured Product */}
-      <section className="section-padding bg-sage">
-        <div className="container-custom">
-          <div className="grid lg:grid-cols-2 gap-10 items-center">
-            <ScrollReveal>
-              <img src={featured.images[0]} alt={featured.name} className="w-full rounded-2xl shadow-lg" />
-            </ScrollReveal>
-            <ScrollReveal delay={0.2}>
-              <span className="text-xs font-bold uppercase tracking-wider text-primary">Planner of the Month</span>
-              <h2 className="font-display text-3xl font-bold text-foreground mt-2">{featured.name}</h2>
-              <p className="text-muted-foreground mt-3 leading-relaxed">{featured.description}</p>
-              <div className="flex items-center gap-3 mt-4">
-                <span className="font-display text-2xl font-bold text-foreground">₹{featured.price}</span>
-                {featured.originalPrice && (
-                  <span className="text-lg text-muted-foreground line-through">₹{featured.originalPrice}</span>
-                )}
-              </div>
-              <div className="flex gap-3 mt-6">
-                <Link
-                  to={`/product/${featured.slug}`}
-                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-7 py-3.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
-                >
-                  View Product <ArrowRight size={16} />
-                </Link>
-              </div>
-            </ScrollReveal>
+      {featured && (
+        <section className="section-padding bg-sage">
+          <div className="container-custom">
+            <div className="grid lg:grid-cols-2 gap-10 items-center">
+              <ScrollReveal>
+                <img src={featured.images[0]} alt={featured.name} className="w-full rounded-2xl shadow-lg" />
+              </ScrollReveal>
+              <ScrollReveal delay={0.2}>
+                <span className="text-xs font-bold uppercase tracking-wider text-primary">Planner of the Month</span>
+                <h2 className="font-display text-3xl font-bold text-foreground mt-2">{featured.name}</h2>
+                <p className="text-muted-foreground mt-3 leading-relaxed">{featured.description}</p>
+                <div className="flex items-center gap-3 mt-4">
+                  <span className="font-display text-2xl font-bold text-foreground">₹{featured.price}</span>
+                  {featured.originalPrice && (
+                    <span className="text-lg text-muted-foreground line-through">₹{featured.originalPrice}</span>
+                  )}
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <Link
+                    to={`/product/${featured.slug}`}
+                    className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-7 py-3.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
+                  >
+                    View Product <ArrowRight size={16} />
+                  </Link>
+                </div>
+              </ScrollReveal>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Crafted for Better Writing */}
       <section className="section-padding">
