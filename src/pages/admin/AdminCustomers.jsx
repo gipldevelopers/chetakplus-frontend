@@ -3,69 +3,55 @@ import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PageHeader, Panel, StatusBadge, Pagination } from "@/components/admin/AdminUi";
+import { PageHeader, Panel, StatusBadge } from "@/components/admin/AdminUi";
+import InfiniteScroll from "react-infinite-scroll-component";
 import api from "@/api";
 
 const AdminCustomers = () => {
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState("");
-  const [customers, setCustomers] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
+  
+  const [items, setItems] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const itemsPerPage = 5;
 
-  useEffect(() => {
-    let isMounted = true;
+  const fetchMoreData = async (reset = false) => {
+    if (loading && !reset) return;
 
-    const loadCustomers = async () => {
-      try {
-        const data = await api.adminGetCustomers();
-        if (!isMounted) return;
-        setCustomers(Array.isArray(data) ? data : []);
-        setError("");
-      } catch (fetchError) {
-        if (!isMounted) return;
-        setError(fetchError?.message || "Unable to load customers.");
-        setCustomers([]);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+    setLoading(true);
+    const targetPage = reset ? 1 : page;
+
+    try {
+      // In production, your API should support ?page=X&limit=Y and return only that slice
+      // Example: const data = await api.adminGetCustomers({ page: targetPage, limit: 10, search: searchValue });
+      
+      const data = await api.adminGetCustomers({ page: targetPage, limit: 10, search: searchValue });
+      setError("");
+
+      if (!data || data.length === 0) {
+        setHasMore(false);
+        if (reset) setItems([]);
+      } else {
+        setItems((prev) => reset ? data : [...prev, ...data]);
+        setPage((prev) => reset ? 2 : prev + 1);
+        
+        // If data length is less than limit, we're likely at the end
+        if (data.length < 10) setHasMore(false);
+        else setHasMore(true);
       }
-    };
-
-    loadCustomers();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const filteredCustomers = useMemo(() => {
-    const token = searchValue.toLowerCase().trim();
-    if (!token) return customers;
-    return customers.filter(
-      (customer) =>
-        String(customer.name || "").toLowerCase().includes(token) ||
-        String(customer.email || "").toLowerCase().includes(token)
-    );
-  }, [searchValue, customers]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchValue]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / itemsPerPage));
-  const paginatedCustomers = filteredCustomers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
+    } catch (fetchError) {
+      setError(fetchError?.message || "Unable to load customers.");
     }
-  }, [currentPage, totalPages]);
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchMoreData(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchValue]);
 
   return (
     <div className="space-y-6">
@@ -91,26 +77,36 @@ const AdminCustomers = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <Table className="admin-table min-w-[900px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Total Orders</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
+          <InfiniteScroll
+            dataLength={items.length}
+            next={() => fetchMoreData(false)}
+            hasMore={hasMore}
+            loader={
+              <div className="py-4 text-center text-sm text-slate-500">
+                Loading...
+              </div>
+            }
+            endMessage={
+              items.length > 0 ? (
+                <div className="py-4 text-center text-sm text-slate-500">
+                  <b>No more customers</b>
+                </div>
+              ) : null
+            }
+          >
+            <Table className="admin-table min-w-[900px]">
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="py-8 text-center text-sm text-slate-500">
-                    Loading customers...
-                  </TableCell>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Total Orders</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ) : (
-                paginatedCustomers.map((customer) => (
-                  <TableRow key={customer.id} onClick={() => navigate(`/admin/customers/${customer.id}`)} className="cursor-pointer">
+              </TableHeader>
+              <TableBody>
+                {items.map((customer) => (
+                  <TableRow key={`${customer.id}-${customer.recordId || Math.random()}`} onClick={() => navigate(`/admin/customers/${customer.id}`)} className="cursor-pointer">
                     <TableCell>
                       <p className="font-semibold text-slate-800">{customer.name}</p>
                       <p className="text-xs text-slate-500">{customer.id}</p>
@@ -122,27 +118,19 @@ const AdminCustomers = () => {
                       <StatusBadge value={customer.status || "Inactive"} />
                     </TableCell>
                   </TableRow>
-                ))
-              )}
+                ))}
 
-              {!loading && paginatedCustomers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-8 text-center text-sm text-slate-500">
-                    No customers found.
-                  </TableCell>
-                </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
+                {!loading && items.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-8 text-center text-sm text-slate-500">
+                      No customers found.
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
+          </InfiniteScroll>
         </div>
-
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          totalItems={filteredCustomers.length}
-          itemsPerPage={itemsPerPage}
-        />
       </Panel>
     </div>
   );
