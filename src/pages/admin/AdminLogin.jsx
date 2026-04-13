@@ -156,7 +156,6 @@ const AdminLogin = () => {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-slate-500">Admin credentials are managed from backend `install.php`.</p>
       </div>
     </div>
   );
