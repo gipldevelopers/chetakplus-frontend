@@ -4,6 +4,9 @@ export const api = {
   getProducts: (params = {}) => apiClient.get("/products.php", { params }),
   getCategories: () => apiClient.get("/categories.php"),
   getHeroSlides: () => apiClient.get("/hero.php"),
+  getFaqs: () => apiClient.get("/faqs.php"),
+  submitCorporateOrder: (payload) => apiClient.post("/corporate-orders.php", payload),
+  subscribeToNewsletter: (email) => apiClient.post("/subscribe.php", { email }),
   getCheckoutSettings: () => apiClient.get("/settings.php"),
 
   authSignUp: (payload) => apiClient.post("/auth/signup.php", payload),
@@ -65,6 +68,18 @@ export const api = {
   adminGetReturns: (params = {}) => apiClient.get("/admin/returns.php", { params }),
   adminGetReturnById: (id) => apiClient.get("/admin/returns.php", { params: { id } }),
   adminUpdateReturn: (id, payload) => apiClient.put("/admin/returns.php", payload, { params: { id } }),
+
+  adminGetFaqs: () => apiClient.get("/admin/faqs.php"),
+  adminGetFaqById: (id) => apiClient.get("/admin/faqs.php", { params: { id } }),
+  adminCreateFaq: (payload) => apiClient.post("/admin/faqs.php", payload),
+  adminUpdateFaq: (id, payload) => apiClient.put("/admin/faqs.php", payload, { params: { id } }),
+  adminDeleteFaq: (id) => apiClient.delete("/admin/faqs.php", { params: { id } }),
+
+  adminGetCorporateOrders: () => apiClient.get("/admin/corporate-orders.php"),
+  adminUpdateCorporateOrderStatus: (id, status) => apiClient.patch("/admin/corporate-orders.php", { status }, { params: { id } }),
+  adminDeleteCorporateOrder: (id) => apiClient.delete("/admin/corporate-orders.php", { params: { id } }),
+  adminGetSubscribers: () => apiClient.get("/admin/subscribers.php"),
+  adminDeleteSubscriber: (id) => apiClient.delete("/admin/subscribers.php", { params: { id } }),
 
   createOrder: (payload) => apiClient.post("/orders.php", payload),
   getUserOrders: ({ email, customerId } = {}) => {

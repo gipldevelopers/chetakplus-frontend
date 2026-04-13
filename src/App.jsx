@@ -19,6 +19,7 @@ import Index from "./pages/Index";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
 import CategoryPage from "./pages/CategoryPage";
+import Categories from "./pages/Categories";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
@@ -56,6 +57,10 @@ import AdminPayments from "./pages/admin/AdminPayments";
 import AdminPaymentDetail from "./pages/admin/AdminPaymentDetail";
 import AdminContacts from "./pages/admin/AdminContacts";
 import AdminContactDetail from "./pages/admin/AdminContactDetail";
+import AdminFAQs from "./pages/admin/AdminFAQs";
+import AdminFAQForm from "./pages/admin/AdminFAQForm";
+import AdminCorporateOrders from "./pages/admin/AdminCorporateOrders";
+import AdminSubscribers from "./pages/admin/AdminSubscribers";
 import AdminSettings from "./pages/admin/AdminSettings";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
@@ -78,6 +83,7 @@ const AppContent = () => {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/shop" element={<Shop />} />
+          <Route path="/categories" element={<Categories />} />
           <Route path="/product/:slug" element={<ProductDetail />} />
           <Route path="/category/:slug" element={<CategoryPage />} />
           <Route path="/about" element={<About />} />
@@ -90,6 +96,7 @@ const AppContent = () => {
           <Route path="/privacy-policy" element={<PolicyPage />} />
           <Route path="/shipping-policy" element={<PolicyPage />} />
           <Route path="/refund-policy" element={<PolicyPage />} />
+          <Route path="/terms" element={<PolicyPage />} />
 
           <Route element={<RequireAuth />}>
             <Route path="/checkout" element={<Checkout />} />
@@ -127,6 +134,11 @@ const AppContent = () => {
             <Route path="payments/:paymentId" element={<AdminPaymentDetail />} />
             <Route path="contacts" element={<AdminContacts />} />
             <Route path="contacts/:contactId" element={<AdminContactDetail />} />
+            <Route path="faqs" element={<AdminFAQs />} />
+            <Route path="faqs/new" element={<AdminFAQForm />} />
+            <Route path="faqs/:faqId/edit" element={<AdminFAQForm />} />
+            <Route path="corporate-orders" element={<AdminCorporateOrders />} />
+            <Route path="subscribers" element={<AdminSubscribers />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
           <Route path="/admin/login" element={<AdminLogin />} />
