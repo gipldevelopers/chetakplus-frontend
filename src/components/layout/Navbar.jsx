@@ -113,7 +113,16 @@ const Navbar = () => {
                 <Link to="/profile" className="flex items-center gap-2 p-1.5 pr-3 rounded-full hover:bg-secondary transition-all">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 overflow-hidden">
                     {profilePhoto ? (
-                      <img src={profilePhoto} alt={userDisplayName || "User"} className="w-full h-full object-cover" />
+                      <img
+                        src={profilePhoto}
+                        alt={userDisplayName || "User"}
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          e.currentTarget.parentElement.innerHTML = `<span class="text-xs font-bold">${userInitial}</span>`;
+                        }}
+                      />
                     ) : (
                       <span className="text-xs font-bold">{userInitial}</span>
                     )}
