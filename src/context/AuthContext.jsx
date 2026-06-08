@@ -48,11 +48,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const savedUserRaw = localStorage.getItem(AUTH_USER_KEY);
-    const hasSession = sessionStorage.getItem(AUTH_SESSION_KEY) === "1";
-
-    if (savedUserRaw && !hasSession) {
-      localStorage.removeItem(AUTH_USER_KEY);
-    } else if (savedUserRaw && hasSession) {
+    if (savedUserRaw) {
       const parsedUser = parseStoredUser(savedUserRaw);
       if (parsedUser) {
         setUser(parsedUser);
@@ -80,7 +76,6 @@ export const AuthProvider = ({ children }) => {
     if (!normalizedUser) return null;
     setUser(normalizedUser);
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(normalizedUser));
-    sessionStorage.setItem(AUTH_SESSION_KEY, "1");
     return normalizedUser;
   };
 
@@ -107,7 +102,6 @@ export const AuthProvider = ({ children }) => {
     const currentEmail = String(user?.email || "").toLowerCase();
     setUser(null);
     localStorage.removeItem(AUTH_USER_KEY);
-    sessionStorage.removeItem(AUTH_SESSION_KEY);
     if (currentEmail) {
       localStorage.removeItem(`chetakplus.address.suggestions.${currentEmail}`);
     }
@@ -119,7 +113,6 @@ export const AuthProvider = ({ children }) => {
     if (!newUser) return;
     setUser(newUser);
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(newUser));
-    sessionStorage.setItem(AUTH_SESSION_KEY, "1");
   };
 
   const value = {

@@ -1,7 +1,38 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Mail, Phone, MapPin, Instagram, Facebook, Twitter } from "lucide-react";
+import { Mail, Phone, MapPin, Instagram, Facebook, Twitter, Loader2, CheckCircle2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import api from "@/api";
 
 const Footer = () => {
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!email) return;
+    setLoading(true);
+    try {
+      const response = await api.subscribeToNewsletter(email);
+      setSubscribed(true);
+      toast({
+        title: "Success!",
+        description: response.message || "You have been subscribed successfully.",
+      });
+      setEmail("");
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err?.message || "Something went wrong.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <footer className="bg-foreground text-background">
       {/* Newsletter CTA */}
@@ -11,16 +42,32 @@ const Footer = () => {
             <h3 className="font-display text-xl font-bold">Get 10% Off Your First Order</h3>
             <p className="text-background/60 text-sm mt-1">Subscribe for productivity tips & exclusive offers.</p>
           </div>
-          <form className="flex gap-2 w-full sm:w-auto">
-            <input
-              type="email"
-              placeholder="Your email address"
-              className="px-4 py-2.5 rounded-xl text-sm bg-background/10 text-background placeholder:text-background/40 focus:outline-none focus:ring-1 focus:ring-primary w-full sm:w-64" />
-            
-            <button type="submit" className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity whitespace-nowrap">
-              Subscribe
-            </button>
-          </form>
+          
+          {subscribed ? (
+            <div className="flex items-center gap-2 text-primary font-medium animate-in fade-in slide-in-from-right-2">
+              <CheckCircle2 size={20} />
+              <span>You're on the list!</span>
+            </div>
+          ) : (
+            <form className="flex gap-2 w-full sm:w-auto" onSubmit={handleSubscribe}>
+              <input
+                required
+                type="email"
+                placeholder="Your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="px-4 py-2.5 rounded-xl text-sm bg-background/10 text-background placeholder:text-background/40 focus:outline-none focus:ring-1 focus:ring-primary w-full sm:w-64"
+              />
+              
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity whitespace-nowrap flex items-center gap-2 disabled:opacity-70"
+              >
+                {loading ? <Loader2 size={16} className="animate-spin" /> : "Subscribe"}
+              </button>
+            </form>
+          )}
         </div>
       </div>
 
@@ -28,8 +75,10 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <div className="mb-4">
-              <img src="/logo.jpg" alt="ChetakPlus" className="h-10 lg:h-12 w-auto object-contain" />
+            <div className="mb-6">
+              <Link to="/">
+                <img src="/logo.jpg" alt="ChetakPlus" className="h-12 lg:h-14 w-auto object-contain brightness-110 contrast-110" />
+              </Link>
             </div>
             <p className="text-background/60 text-sm leading-relaxed mb-6">
               Premium quality paper stationery for students, professionals, and everyone who loves to write.
@@ -70,7 +119,7 @@ const Footer = () => {
           </div>
 
           {/* Company */}
-          <div className="-ml-2">
+          <div>
             <h4 className="font-semibold text-sm uppercase tracking-wider mb-4">Company</h4>
             <ul className="space-y-3">
               {[
@@ -108,8 +157,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact */}
-          <div className="-ml-2">
+          <div>
             <h4 className="font-semibold text-sm uppercase tracking-wider mb-4">Contact Us</h4>
             <ul className="space-y-3">
               <li className="flex items-start gap-2 text-sm text-background/60">

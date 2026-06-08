@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { useData } from "@/context/DataContext";
@@ -19,6 +19,7 @@ const Shop = () => {
   const [sortBy, setSortBy] = useState("featured");
   const [showFilters, setShowFilters] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 1000]);
+  const [searchValue, setSearchValue] = useState("");
 
   const [activeFilter, setActiveFilter] = useState(null);
 
@@ -43,6 +44,15 @@ const Shop = () => {
 
   const filtered = useMemo(() => {
     let result = [...products];
+
+    if (searchValue) {
+      const token = searchValue.toLowerCase();
+      result = result.filter((p) =>
+        p.name.toLowerCase().includes(token) ||
+        (p.category && p.category.toLowerCase().includes(token))
+      );
+    }
+
     if (selectedCategory !== "all") {
       result = result.filter((p) => p.categorySlug === selectedCategory);
     }
@@ -61,7 +71,7 @@ const Shop = () => {
       default: break;
     }
     return result;
-  }, [selectedCategory, sortBy, priceRange, products, activeFilter]);
+  }, [selectedCategory, sortBy, priceRange, products, activeFilter, searchValue]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading products...</div>;
@@ -84,6 +94,20 @@ const Shop = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Desktop Filters */}
           <aside className="hidden lg:block w-60 shrink-0 space-y-8">
+            <div>
+              <h3 className="font-semibold text-sm mb-3">Search</h3>
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 text-sm border border-border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                />
+              </div>
+            </div>
+
             <div>
               <h3 className="font-semibold text-sm mb-3">Categories</h3>
               <div className="space-y-2">
@@ -156,6 +180,18 @@ const Shop = () => {
                   <h3 className="font-semibold text-sm">Filters</h3>
                   <button onClick={() => setShowFilters(false)}><X size={16} /></button>
                 </div>
+
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 text-sm border border-border rounded-xl bg-background focus:outline-none focus:ring-1 focus:ring-primary/20"
+                  />
+                </div>
+
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setSelectedCategory("all")}

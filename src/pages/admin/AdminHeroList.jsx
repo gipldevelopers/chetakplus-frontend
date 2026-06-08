@@ -1,56 +1,51 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/api";
-import { PageHeader, Panel, StatusBadge, Pagination } from "@/components/admin/AdminUi";
-
-const ITEMS_PER_PAGE = 5;
+import { PageHeader, Panel, StatusBadge } from "@/components/admin/AdminUi";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 const AdminHeroList = () => {
   const navigate = useNavigate();
-  const [heroes, setHeroes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  
+  const [items, setItems] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    let isMounted = true;
+  const fetchMoreData = async (reset = false) => {
+    if (loading && !reset) return;
 
-    const fetchHeroes = async () => {
-      try {
-        const data = await api.adminGetHeroes();
-        if (!isMounted) return;
-        setHeroes(Array.isArray(data) ? data : []);
-        setError("");
-      } catch (fetchError) {
-        if (!isMounted) return;
-        setError(fetchError?.message || "Unable to load hero slides.");
-        setHeroes([]);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+    setLoading(true);
+    const targetPage = reset ? 1 : page;
+
+    try {
+      const data = await api.adminGetHeroes({ page: targetPage, limit: 10 });
+      setError("");
+
+      if (!data || data.length === 0) {
+        setHasMore(false);
+        if (reset) setItems([]);
+      } else {
+        setItems((prev) => reset ? data : [...prev, ...data]);
+        setPage((prev) => reset ? 2 : prev + 1);
+
+        if (data.length < 10) setHasMore(false);
+        else setHasMore(true);
       }
-    };
+    } catch (fetchError) {
+      setError(fetchError?.message || "Unable to load hero slides.");
+    }
 
-    fetchHeroes();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(heroes.length / ITEMS_PER_PAGE)), [heroes.length]);
-  const paginatedHeroes = useMemo(
-    () => heroes.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE),
-    [heroes, currentPage],
-  );
+    setLoading(false);
+  };
 
   useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+    fetchMoreData(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDelete = async (id) => {
     const shouldDelete = window.confirm("Delete this hero slide?");
@@ -58,7 +53,7 @@ const AdminHeroList = () => {
 
     try {
       await api.adminDeleteHero(id);
-      setHeroes((prev) => prev.filter((hero) => hero.id !== id));
+      setItems((prev) => prev.filter((hero) => hero.id !== id));
     } catch (deleteError) {
       setError(deleteError?.message || "Unable to delete hero slide.");
     }
@@ -83,11 +78,21 @@ const AdminHeroList = () => {
         </Panel>
       ) : null}
 
-      {loading ? (
-        <Panel className="p-6 text-sm text-slate-500">Loading hero sections...</Panel>
-      ) : (
+      <InfiniteScroll
+        dataLength={items.length}
+        next={() => fetchMoreData(false)}
+        hasMore={hasMore}
+        loader={<div className="p-6 text-center text-sm text-slate-500">Loading...</div>}
+        endMessage={
+          items.length > 0 ? (
+            <div className="p-6 text-center text-sm text-slate-500">
+              <b>No more hero slides</b>
+            </div>
+          ) : null
+        }
+      >
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {paginatedHeroes.map((hero) => (
+          {items.map((hero) => (
             <Panel key={hero.id} className="overflow-hidden">
               <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
                 {hero.mediaType === "video" ? (
@@ -141,22 +146,10 @@ const AdminHeroList = () => {
             </Panel>
           ))}
         </div>
-      )}
+      </InfiniteScroll>
 
-      {!loading && heroes.length === 0 ? (
+      {!loading && items.length === 0 ? (
         <Panel className="p-6 text-sm text-slate-500">No hero sections found yet.</Panel>
-      ) : null}
-
-      {heroes.length > 0 ? (
-        <div className="mt-8">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-            totalItems={heroes.length}
-            itemsPerPage={ITEMS_PER_PAGE}
-          />
-        </div>
       ) : null}
     </div>
   );

@@ -1,73 +1,56 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PageHeader, Panel, StatusBadge, Pagination } from "@/components/admin/AdminUi";
+import { PageHeader, Panel, StatusBadge } from "@/components/admin/AdminUi";
+import InfiniteScroll from "react-infinite-scroll-component";
 import api from "@/api";
 
-const ITEMS_PER_PAGE = 5;
 const formatCurrency = (value) => `Rs ${Number(value || 0).toLocaleString("en-IN")}`;
 
 const AdminProducts = () => {
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState("");
-  const [products, setProducts] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
+
+  const [items, setItems] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let isMounted = true;
+  const fetchMoreData = async (reset = false) => {
+    if (loading && !reset) return;
 
-    const loadProducts = async () => {
-      try {
-        const data = await api.adminGetProducts();
-        if (!isMounted) return;
-        setProducts(Array.isArray(data) ? data : []);
-        setError("");
-      } catch (fetchError) {
-        if (!isMounted) return;
-        setError(fetchError?.message || "Unable to load products.");
-        setProducts([]);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+    setLoading(true);
+    const targetPage = reset ? 1 : page;
+
+    try {
+      const data = await api.adminGetProducts({ page: targetPage, limit: 10, search: searchValue });
+      setError("");
+
+      if (!data || data.length === 0) {
+        setHasMore(false);
+        if (reset) setItems([]);
+      } else {
+        setItems((prev) => reset ? data : [...prev, ...data]);
+        setPage((prev) => reset ? 2 : prev + 1);
+
+        if (data.length < 10) setHasMore(false);
+        else setHasMore(true);
       }
-    };
+    } catch (fetchError) {
+      setError(fetchError?.message || "Unable to load products.");
+    }
 
-    loadProducts();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const filteredProducts = useMemo(() => {
-    const token = searchValue.toLowerCase().trim();
-    if (!token) return products;
-
-    return products.filter((product) => {
-      const name = String(product.name || "").toLowerCase();
-      const category = String(product.category || "").toLowerCase();
-      const sku = String(product.sku || "").toLowerCase();
-      const slug = String(product.slug || "").toLowerCase();
-      return name.includes(token) || category.includes(token) || sku.includes(token) || slug.includes(token);
-    });
-  }, [products, searchValue]);
-
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)), [filteredProducts.length]);
-  const paginatedProducts = useMemo(
-    () => filteredProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE),
-    [filteredProducts, currentPage],
-  );
+    setLoading(false);
+  };
 
   useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+    fetchMoreData(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchValue]);
 
   const removeProduct = async (id) => {
     const shouldDelete = window.confirm("Delete this product?");
@@ -75,7 +58,7 @@ const AdminProducts = () => {
 
     try {
       await api.adminDeleteProduct(id);
-      setProducts((prev) => prev.filter((product) => String(product.id) !== String(id)));
+      setItems((prev) => prev.filter((product) => String(product.id) !== String(id)));
     } catch (deleteError) {
       setError(deleteError?.message || "Unable to delete product.");
     }
@@ -113,10 +96,24 @@ const AdminProducts = () => {
           </div>
         </div>
 
-        {loading ? (
-          <div className="p-6 text-sm text-slate-500">Loading products...</div>
-        ) : (
-          <div className="overflow-x-auto">
+        <div className="overflow-x-auto">
+          <InfiniteScroll
+            dataLength={items.length}
+            next={() => fetchMoreData(false)}
+            hasMore={hasMore}
+            loader={
+              <div className="py-4 text-center text-sm text-slate-500">
+                Loading...
+              </div>
+            }
+            endMessage={
+              items.length > 0 ? (
+                <div className="py-4 text-center text-sm text-slate-500">
+                  <b>No more products</b>
+                </div>
+              ) : null
+            }
+          >
             <Table className="admin-table min-w-[900px]">
               <TableHeader>
                 <TableRow>
@@ -130,7 +127,7 @@ const AdminProducts = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedProducts.map((product) => (
+                {items.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell>
                       <div className="h-12 w-12 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
@@ -182,7 +179,7 @@ const AdminProducts = () => {
                   </TableRow>
                 ))}
 
-                {paginatedProducts.length === 0 ? (
+                {!loading && items.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="py-8 text-center text-sm text-slate-500">
                       No products found.
@@ -191,19 +188,12 @@ const AdminProducts = () => {
                 ) : null}
               </TableBody>
             </Table>
-          </div>
-        )}
-
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          totalItems={filteredProducts.length}
-          itemsPerPage={ITEMS_PER_PAGE}
-        />
+          </InfiniteScroll>
+        </div>
       </Panel>
     </div>
   );
 };
 
 export default AdminProducts;
+

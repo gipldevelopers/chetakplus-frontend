@@ -1,54 +1,50 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PageHeader, Panel, StatusBadge, Pagination } from "@/components/admin/AdminUi";
+import { PageHeader, Panel, StatusBadge } from "@/components/admin/AdminUi";
+import InfiniteScroll from "react-infinite-scroll-component";
 import api from "@/api";
 
 const AdminContacts = () => {
   const navigate = useNavigate();
-  const [contacts, setContacts] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
+  
+  const [items, setItems] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const itemsPerPage = 5;
 
-  useEffect(() => {
-    let isMounted = true;
+  const fetchMoreData = async (reset = false) => {
+    if (loading && !reset) return;
 
-    const loadContacts = async () => {
-      try {
-        const data = await api.adminGetContacts();
-        if (!isMounted) return;
-        setContacts(Array.isArray(data) ? data : []);
-        setError("");
-      } catch (fetchError) {
-        if (!isMounted) return;
-        setError(fetchError?.message || "Unable to load contact inquiries.");
-        setContacts([]);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+    setLoading(true);
+    const targetPage = reset ? 1 : page;
+
+    try {
+      const data = await api.adminGetContacts({ page: targetPage, limit: 10 });
+      setError("");
+
+      if (!data || data.length === 0) {
+        setHasMore(false);
+        if (reset) setItems([]);
+      } else {
+        setItems((prev) => reset ? data : [...prev, ...data]);
+        setPage((prev) => reset ? 2 : prev + 1);
+
+        if (data.length < 10) setHasMore(false);
+        else setHasMore(true);
       }
-    };
+    } catch (fetchError) {
+      setError(fetchError?.message || "Unable to load contact inquiries.");
+    }
 
-    loadContacts();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(contacts.length / itemsPerPage)), [contacts.length]);
-  const paginatedContacts = useMemo(
-    () => contacts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
-    [contacts, currentPage]
-  );
+    setLoading(false);
+  };
 
   useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+    fetchMoreData(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -62,25 +58,35 @@ const AdminContacts = () => {
 
       <Panel className="overflow-hidden">
         <div className="overflow-x-auto">
-          <Table className="admin-table min-w-[900px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Message Preview</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
+          <InfiniteScroll
+            dataLength={items.length}
+            next={() => fetchMoreData(false)}
+            hasMore={hasMore}
+            loader={
+              <div className="py-4 text-center text-sm text-slate-500">
+                Loading...
+              </div>
+            }
+            endMessage={
+              items.length > 0 ? (
+                <div className="py-4 text-center text-sm text-slate-500">
+                  <b>No more contact inquiries</b>
+                </div>
+              ) : null
+            }
+          >
+            <Table className="admin-table min-w-[900px]">
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="py-8 text-center text-sm text-slate-500">
-                    Loading contacts...
-                  </TableCell>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Message Preview</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ) : (
-                paginatedContacts.map((contact) => (
+              </TableHeader>
+              <TableBody>
+                {items.map((contact) => (
                   <TableRow key={contact.id} onClick={() => navigate(`/admin/contacts/${contact.id}`)} className="cursor-pointer">
                     <TableCell className="font-semibold text-slate-800">{contact.name}</TableCell>
                     <TableCell>{contact.email}</TableCell>
@@ -92,27 +98,19 @@ const AdminContacts = () => {
                       <StatusBadge value={contact.status} />
                     </TableCell>
                   </TableRow>
-                ))
-              )}
+                ))}
 
-              {!loading && paginatedContacts.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-8 text-center text-sm text-slate-500">
-                    No contact inquiries found.
-                  </TableCell>
-                </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
+                {!loading && items.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-8 text-center text-sm text-slate-500">
+                      No contact inquiries found.
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
+          </InfiniteScroll>
         </div>
-
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          totalItems={contacts.length}
-          itemsPerPage={itemsPerPage}
-        />
       </Panel>
     </div>
   );

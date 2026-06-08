@@ -1,15 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Edit, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader, Panel, StatusBadge } from "@/components/admin/AdminUi";
+import { useToast } from "@/hooks/use-toast";
 import InfiniteScroll from "react-infinite-scroll-component";
 import api from "@/api";
 
-const AdminCategories = () => {
+const AdminFAQs = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchValue, setSearchValue] = useState("");
   
   const [items, setItems] = useState([]);
@@ -25,7 +27,7 @@ const AdminCategories = () => {
     const targetPage = reset ? 1 : page;
 
     try {
-      const data = await api.adminGetCategories({ page: targetPage, limit: 10, search: searchValue });
+      const data = await api.adminGetFaqs({ page: targetPage, limit: 10, search: searchValue });
       setError("");
 
       if (!data || data.length === 0) {
@@ -39,7 +41,7 @@ const AdminCategories = () => {
         else setHasMore(true);
       }
     } catch (fetchError) {
-      setError(fetchError?.message || "Unable to load categories.");
+      setError(fetchError?.message || "Unable to load FAQs.");
     }
 
     setLoading(false);
@@ -50,27 +52,53 @@ const AdminCategories = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchValue]);
 
-  const removeCategory = async (id) => {
-    const shouldDelete = window.confirm("Delete this category?");
+  const toggleFaqStatus = async (faq) => {
+    const newStatus = faq.status === "Active" ? "Inactive" : "Active";
+    try {
+      await api.adminUpdateFaq(faq.id, {
+        ...faq,
+        status: newStatus,
+      });
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === faq.id ? { ...item, status: newStatus } : item
+        )
+      );
+      toast({
+        title: `FAQ ${newStatus}`,
+        description: `The FAQ has been turned ${newStatus.toLowerCase()}.`,
+      });
+    } catch (err) {
+      setError(err?.message || "Unable to update status.");
+      toast({
+        title: "Update Failed",
+        description: err?.message || "Something went wrong.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const removeFaq = async (id) => {
+    const shouldDelete = window.confirm("Delete this FAQ?");
     if (!shouldDelete) return;
 
     try {
-      await api.adminDeleteCategory(id);
+      await api.adminDeleteFaq(id);
       setItems((prev) => prev.filter((item) => item.id !== id));
     } catch (deleteError) {
-      setError(deleteError?.message || "Unable to delete category.");
+      setError(deleteError?.message || "Unable to delete FAQ.");
     }
   };
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Categories"
-        description="Organize storefront taxonomy with complete category metadata and SEO controls."
+        title="FAQs"
+        description="Manage frequently asked questions and their categories for the help center."
         actions={
-          <Button onClick={() => navigate("/admin/categories/new")} className="rounded-xl bg-slate-900 text-white hover:bg-slate-800">
+          <Button onClick={() => navigate("/admin/faqs/new")} className="rounded-xl bg-slate-900 text-white hover:bg-slate-800">
             <Plus className="mr-2 h-4 w-4" />
-            Add Category
+            Add FAQ
           </Button>
         }
       />
@@ -88,7 +116,7 @@ const AdminCategories = () => {
             <Input
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
-              placeholder="Search by name or slug"
+              placeholder="Search by question or category"
               className="h-10 rounded-xl border-slate-200 bg-slate-50 pl-9"
             />
           </div>
@@ -107,7 +135,7 @@ const AdminCategories = () => {
             endMessage={
               items.length > 0 ? (
                 <div className="py-4 text-center text-sm text-slate-500">
-                  <b>No more categories</b>
+                  <b>No more FAQs</b>
                 </div>
               ) : null
             }
@@ -115,42 +143,37 @@ const AdminCategories = () => {
             <Table className="admin-table min-w-[900px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Slug</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead>Question</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Order</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((category) => (
-                  <TableRow key={category.id}>
-                    <TableCell>
-                      <div className="h-12 w-16 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-                        {category.imageUrl ? (
-                          <img src={category.imageUrl} alt={category.name} className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">
-                            No image
-                          </div>
-                        )}
-                      </div>
+                {items.map((faq) => (
+                  <TableRow key={faq.id}>
+                    <TableCell className="max-w-md">
+                      <p className="font-semibold text-slate-800 line-clamp-1">{faq.question}</p>
+                      <p className="text-xs text-slate-500 line-clamp-2">{faq.answer}</p>
                     </TableCell>
+                    <TableCell>{faq.category || "General"}</TableCell>
+                    <TableCell>{faq.sortOrder}</TableCell>
                     <TableCell>
-                      <p className="font-semibold text-slate-800">{category.name}</p>
-                      <p className="text-xs text-slate-500">{category.productCount || 0} products</p>
-                    </TableCell>
-                    <TableCell className="font-mono text-xs text-slate-600">/{category.slug}</TableCell>
-                    <TableCell>{category.type || "Default"}</TableCell>
-                    <TableCell>
-                      <StatusBadge value={category.status || "Inactive"} />
+                      <button
+                        type="button"
+                        onClick={() => toggleFaqStatus(faq)}
+                        className="hover:opacity-80 transition-opacity"
+                        title="Click to toggle status"
+                      >
+                        <StatusBadge value={faq.status || "Inactive"} />
+                      </button>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => navigate(`/admin/categories/${category.id}/edit`)}
+                          onClick={() => navigate(`/admin/faqs/${faq.id}/edit`)}
                           className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
                         >
                           <Edit className="h-3.5 w-3.5" />
@@ -158,7 +181,7 @@ const AdminCategories = () => {
                         </button>
                         <button
                           type="button"
-                          onClick={() => removeCategory(category.id)}
+                          onClick={() => removeFaq(faq.id)}
                           className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-2.5 py-1.5 text-xs font-medium text-rose-600 transition hover:bg-rose-50"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -171,8 +194,8 @@ const AdminCategories = () => {
 
                 {!loading && items.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-8 text-center text-sm text-slate-500">
-                      No categories found.
+                    <TableCell colSpan={5} className="py-8 text-center text-sm text-slate-500">
+                      No FAQs found.
                     </TableCell>
                   </TableRow>
                 ) : null}
@@ -185,4 +208,4 @@ const AdminCategories = () => {
   );
 };
 
-export default AdminCategories;
+export default AdminFAQs;

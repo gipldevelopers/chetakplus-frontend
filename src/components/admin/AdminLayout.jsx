@@ -8,6 +8,7 @@ import {
   CreditCard,
   LayoutDashboard,
   LogOut,
+  Mail,
   Menu,
   MessageSquare,
   Package,
@@ -19,6 +20,7 @@ import {
   Star,
   Tags,
   Users,
+  Briefcase,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,6 +49,9 @@ const navItems = [
   { label: "Returns", to: "/admin/returns", icon: RefreshCcw },
   { label: "Payments", to: "/admin/payments", icon: CreditCard },
   { label: "Contacts", to: "/admin/contacts", icon: Contact },
+  { label: "FAQs", to: "/admin/faqs", icon: MessageSquare },
+  { label: "Corporate Orders", to: "/admin/corporate-orders", icon: Briefcase },
+  { label: "Subscribers", to: "/admin/subscribers", icon: Mail },
   { label: "Settings", to: "/admin/settings", icon: Settings },
 ];
 
@@ -95,7 +100,6 @@ const AdminLayout = () => {
               </div>
               {!isSidebarCollapsed ? (
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-white">Chetak Plus</p>
                   <p className="truncate text-[10px] font-bold uppercase tracking-[0.1em] text-white/50">Admin</p>
                 </div>
               ) : null}
