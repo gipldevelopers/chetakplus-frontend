@@ -135,8 +135,8 @@ const SignUp = () => {
 
             <div className="mb-8 flex justify-center">
               <GoogleLogin
-                onSuccess={(credentialResponse) => {
-                  const userData = loginWithGoogle(credentialResponse.credential);
+                onSuccess={async (credentialResponse) => {
+                  const userData = await loginWithGoogle(credentialResponse.credential);
                   if (userData) {
                     toast.success("Account created with Google!");
                     navigate(redirectTarget, { replace: true });

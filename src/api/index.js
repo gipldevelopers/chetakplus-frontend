@@ -11,6 +11,7 @@ export const api = {
 
   authSignUp: (payload) => apiClient.post("/auth/signup.php", payload),
   authSignIn: (payload) => apiClient.post("/auth/signin.php", payload),
+  authGoogleSignIn: (idToken) => apiClient.post("/auth/google-signin.php", { idToken }),
   authForgotPassword: (payload) => apiClient.post("/auth/forgot-password.php", payload),
   authVerifyResetToken: ({ email, token }) => apiClient.get("/auth/reset-password.php", { params: { email, token } }),
   authResetPassword: (payload) => apiClient.post("/auth/reset-password.php", payload),

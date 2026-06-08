@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
+import api from "@/api";
 
 const AuthContext = createContext(undefined);
 const AUTH_USER_KEY = "chetakplus.auth.user";
@@ -79,7 +80,27 @@ export const AuthProvider = ({ children }) => {
     return normalizedUser;
   };
 
-  const loginWithGoogle = (credential) => {
+  const loginWithGoogle = async (credential) => {
+    try {
+      // Call backend to verify token and upsert customer — gets a real DB id back
+      const response = await api.authGoogleSignIn(credential);
+      if (response?.user) {
+        // Preserve the Google photo from the decoded token if backend doesn't return one
+        const decoded = jwtDecode(credential);
+        const userData = {
+          ...response.user,
+          photoURL: response.user.photoURL || decoded.picture || "",
+          picture: response.user.photoURL || decoded.picture || "",
+          provider: "google",
+        };
+        return login(userData);
+      }
+    } catch (error) {
+      console.error("Google sign-in backend error:", error);
+      // Fall back to client-side decode so UI doesn't break
+    }
+
+    // Fallback: decode locally (user won't have a DB id, limited functionality)
     try {
       const decoded = jwtDecode(credential);
       const userData = {
@@ -92,8 +113,8 @@ export const AuthProvider = ({ children }) => {
         displayName: decoded.name,
       };
       return login(userData);
-    } catch (error) {
-      console.error("Google login decode error:", error);
+    } catch (decodeError) {
+      console.error("Google login decode error:", decodeError);
       return null;
     }
   };
