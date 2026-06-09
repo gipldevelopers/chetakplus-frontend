@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import ProductCard from "@/components/ProductCard";
 import HeroCarousel from "@/components/HeroCarousel";
+import { getImageUrl } from "@/lib/utils";
 import { useData } from "@/context/DataContext";
 import categoryPlanners from "@/assets/category-planners.jpg";
 import categoryNotebooks from "@/assets/category-notebooks.jpg";
@@ -39,6 +40,7 @@ import bestSellersIcon from "@/assets/icons/best-sellers-icon.png";
 import catOfficeStationery from "@/assets/cat-office-stationery.png";
 import catSchoolStationery from "@/assets/cat-school-stationery.png";
 import catCorporateGifts from "@/assets/cat-corporate-gifts.png";
+
 
 // Quick browse icon strip — now with product images
 const quickBrowse = [
