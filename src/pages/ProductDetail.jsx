@@ -67,10 +67,6 @@ const ProductDetail = () => {
     } catch {/* ignore */ }
   }, [product, products]);
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
-
   // Sticky bar on scroll
   useEffect(() => {
     const handler = () => setShowStickyBar(window.scrollY > 500);
@@ -105,6 +101,10 @@ const ProductDetail = () => {
 
     window.scrollTo(0, 0);
   }, [slug, product, location.hash]);
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+  }
 
   if (!product) {
     return (
