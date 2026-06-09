@@ -1,7 +1,7 @@
 import { getImageUrl } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Eye, Pencil, Plus, Search, Trash2, Download, Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,12 +13,14 @@ const formatCurrency = (value) => `Rs ${Number(value || 0).toLocaleString("en-IN
 
 const AdminProducts = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const [searchValue, setSearchValue] = useState("");
 
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [error, setError] = useState("");
 
   const fetchMoreData = async (reset = false) => {
@@ -65,16 +67,74 @@ const AdminProducts = () => {
     }
   };
 
+  const handleDownloadTemplate = () => {
+    // Directly open the backend URL to trigger the file download
+    // This bypasses the apiClient which tries to parse it as JSON
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || "/backend/api";
+    const downloadUrl = `${baseUrl.replace(/\/+$/, "")}/admin/product-template.php`;
+    window.open(downloadUrl, '_blank');
+  };
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setImporting(true);
+    try {
+      const response = await api.adminImportProducts(file);
+      alert(`Import successful!\nImported: ${response.imported || 0}\nUpdated: ${response.updated || 0}`);
+      if (response.errors && response.errors.length > 0) {
+        console.error("Import errors:", response.errors);
+        alert(`Warning: ${response.errors.length} rows had errors. Check console.`);
+      }
+      fetchMoreData(true);
+    } catch (err) {
+      setError(err.message || "Failed to import products");
+    } finally {
+      setImporting(false);
+      // reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Products"
         description="Manage catalog inventory, pricing, stock levels, and publishing state."
         actions={
-          <Button onClick={() => navigate("/admin/products/new")} className="rounded-xl bg-slate-900 text-white hover:bg-slate-800">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Product
-          </Button>
+          <div className="flex flex-wrap gap-3 items-center">
+            <input
+              type="file"
+              accept=".csv"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <Button
+              variant="outline"
+              onClick={handleDownloadTemplate}
+              className="rounded-xl border-slate-200"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Template
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importing}
+              className="rounded-xl border-slate-200"
+            >
+              {importing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+              {importing ? "Importing..." : "Import CSV"}
+            </Button>
+            <Button onClick={() => navigate("/admin/products/new")} className="rounded-xl bg-slate-900 text-white hover:bg-slate-800">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Product
+            </Button>
+          </div>
         }
       />
 

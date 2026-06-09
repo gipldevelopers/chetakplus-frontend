@@ -41,6 +41,17 @@ export const api = {
   adminCreateProduct: (payload) => apiClient.post("/admin/products.php", payload),
   adminUpdateProduct: (id, payload) => apiClient.put("/admin/products.php", payload, { params: { id } }),
   adminDeleteProduct: (id) => apiClient.delete("/admin/products.php", { params: { id } }),
+  
+  adminImportProducts: (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiClient.post("/admin/import-products.php", formData);
+  },
+  adminDownloadProductTemplate: () => {
+    // This is typically handled by setting window.location.href to the backend URL 
+    // or by fetching the blob and downloading it.
+    return apiClient.get("/admin/product-template.php", { responseType: 'blob' });
+  },
 
   adminGetOrders: (params = {}) => apiClient.get("/admin/orders.php", { params }),
   adminGetOrderById: (id) => apiClient.get("/admin/orders.php", { params: { id } }),
