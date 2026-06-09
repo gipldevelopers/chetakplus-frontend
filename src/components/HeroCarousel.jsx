@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight, Truck, Shield, Sparkles } from "lucide-react";
@@ -393,7 +394,7 @@ const HeroCarousel = () => {
                   />
                 ) : (
                   <img
-                    src={slide.media.src}
+                    src={getImageUrl(slide.media.src)}
                     alt={slide.highlight || slide.title}
                     className="h-full w-full object-cover"
                   />

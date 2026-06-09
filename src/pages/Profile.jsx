@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeftRight, Heart, Loader2, LogOut, MapPin, Package, RefreshCcw, Settings, Trash2, UploadCloud } from "lucide-react";
@@ -449,12 +450,15 @@ const Profile = () => {
                                   <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 bg-secondary/30 rounded-lg flex items-center justify-center border border-border overflow-hidden">
                                       {image ? (
-                                        <img src={image} alt={item.name} className="w-full h-full object-cover" />
+                                        <img src={getImageUrl(image)} alt={item.name} className="w-full h-full object-cover" />
                                       ) : <Package size={20} className="text-muted-foreground" />}
                                     </div>
                                     <div>
                                       <p className="text-sm font-semibold">{item.name}</p>
-                                      <p className="text-xs text-muted-foreground">Qty: {quantity}</p>
+                                      {item.selectedVariants && item.selectedVariants.title && (
+                                        <p className="text-xs text-muted-foreground mt-0.5">{item.selectedVariants.title}</p>
+                                      )}
+                                      <p className="text-xs text-muted-foreground mt-0.5">Qty: {quantity}</p>
                                       {item.productMessage ? <p className="text-[10px] text-rose-600 mt-0.5">{item.productMessage}</p> : null}
                                     </div>
                                   </div>
@@ -729,7 +733,7 @@ const Profile = () => {
                               <div className="mt-4 p-4 bg-secondary/30 rounded-xl flex items-center gap-4 border border-border/50 group-hover:bg-secondary/50 transition-colors">
                                 <div className="p-1.5 bg-white rounded-lg shadow-sm border border-border/50">
                                   <img
-                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(order.codVerificationCode)}`}
+                                    src={getImageUrl(`https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(order.codVerificationCode)}`)}
                                     alt="Delivery verification QR"
                                     className="w-12 h-12 rounded filter contrast-125"
                                   />
@@ -842,7 +846,7 @@ const Profile = () => {
                         <div className="flex gap-4">
                           <Link to={`/product/${item.slug}`} className="w-20 h-20 rounded-lg overflow-hidden border border-border flex-shrink-0">
                             <img
-                              src={item.images?.[0] || item.image || "/placeholder.svg"}
+                              src={getImageUrl(item.images?.[0] || item.image || "/placeholder.svg")}
                               alt={item.name}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             />

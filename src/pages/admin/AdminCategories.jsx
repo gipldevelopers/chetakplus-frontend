@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Edit, Plus, Search, Trash2 } from "lucide-react";
@@ -129,7 +130,7 @@ const AdminCategories = () => {
                     <TableCell>
                       <div className="h-12 w-16 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
                         {category.imageUrl ? (
-                          <img src={category.imageUrl} alt={category.name} className="h-full w-full object-cover" />
+                          <img src={getImageUrl(category.imageUrl)} alt={category.name} className="h-full w-full object-cover" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">
                             No image

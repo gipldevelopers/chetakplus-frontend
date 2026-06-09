@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingBag, Menu, X, ChevronDown, Search, Heart, ChevronRight, User } from "lucide-react";
@@ -114,7 +115,7 @@ const Navbar = () => {
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 overflow-hidden">
                     {profilePhoto ? (
                       <img
-                        src={profilePhoto}
+                        src={getImageUrl(profilePhoto)}
                         alt={userDisplayName || "User"}
                         className="w-full h-full object-cover"
                         referrerPolicy="no-referrer"

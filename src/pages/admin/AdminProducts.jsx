@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, Pencil, Plus, Search, Trash2 } from "lucide-react";
@@ -132,7 +133,7 @@ const AdminProducts = () => {
                     <TableCell>
                       <div className="h-12 w-12 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
                         {product.images?.[0] ? (
-                          <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
+                          <img src={getImageUrl(product.images[0])} alt={product.name} className="h-full w-full object-cover" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">No image</div>
                         )}

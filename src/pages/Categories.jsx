@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import ScrollReveal from "@/components/ui/ScrollReveal";
@@ -42,7 +43,7 @@ const Categories = () => {
                   >
                     <div className="aspect-[4/5] overflow-hidden">
                       <img 
-                        src={category.imageUrl || "https://images.unsplash.com/photo-1544816155-12df96467463?q=80&w=800&auto=format&fit=crop"} 
+                        src={getImageUrl(category.imageUrl || "https://images.unsplash.com/photo-1544816155-12df96467463?q=80&w=800&auto=format&fit=crop")} 
                         alt={category.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out brightness-[0.85] group-hover:brightness-[0.7]"
                       />

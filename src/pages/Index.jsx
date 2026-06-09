@@ -77,10 +77,10 @@ const budgetPicks = [
 ];
 
 const categories = [
-  { name: "Planners", image: categoryPlanners, href: "/category/planners", count: "12+ Products", desc: "Organise your life" },
-  { name: "Notebooks", image: categoryNotebooks, href: "/category/notebooks", count: "15+ Products", desc: "Write your ideas" },
-  { name: "Journals", image: categoryJournals, href: "/category/journals", count: "8+ Products", desc: "Reflect & grow" },
-  { name: "Office Stationery", image: categoryOffice, href: "/category/office-stationery", count: "20+ Products", desc: "Desk essentials" },
+  { name: "Planners", image: categoryPlanners, href: "/category/planners", categorySlug: "planners", count: "12+ Products", desc: "Organise your life" },
+  { name: "Notebooks", image: categoryNotebooks, href: "/category/notebooks", categorySlug: "notebooks", count: "15+ Products", desc: "Write your ideas" },
+  { name: "Journals", image: categoryJournals, href: "/category/journals", categorySlug: "journals", count: "8+ Products", desc: "Reflect & grow" },
+  { name: "Office Stationery", image: categoryOffice, href: "/category/office-stationery", categorySlug: "office-stationery", count: "20+ Products", desc: "Desk essentials" },
 ];
 
 const useCases = [
@@ -144,6 +144,7 @@ const Index = () => {
                 desc: "Desk essentials for the modern workspace",
                 image: catOfficeStationery,
                 href: "/category/office-stationery",
+                categorySlug: "office-stationery",
                 gradient: "from-[hsl(220,45%,20%/0.85)] to-[hsl(220,40%,30%/0.4)]",
               },
               {
@@ -151,6 +152,7 @@ const Index = () => {
                 desc: "Everything students need to excel",
                 image: catSchoolStationery,
                 href: "/shop?category=school",
+                categorySlug: "school",
                 gradient: "from-[hsl(160,35%,25%/0.85)] to-[hsl(150,30%,35%/0.4)]",
               },
               {
@@ -158,9 +160,10 @@ const Index = () => {
                 desc: "Premium gifting for every milestone",
                 image: catCorporateGifts,
                 href: "/corporate",
+                categorySlug: "corporate",
                 gradient: "from-[hsl(30,40%,20%/0.85)] to-[hsl(35,35%,30%/0.4)]",
               },
-            ].map((cat, i) => (
+            ].filter(cat => cat.categorySlug === 'corporate' ? true : products.some(p => p.categorySlug === cat.categorySlug)).map((cat, i) => (
               <ScrollReveal
                 key={cat.title}
                 delay={i * 0.1}
@@ -361,7 +364,7 @@ const Index = () => {
             </div>
           </ScrollReveal>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
-            {categories.map((cat, i) => (
+            {categories.filter(cat => products.some(p => p.categorySlug === cat.categorySlug)).map((cat, i) => (
               <ScrollReveal key={cat.name} delay={i * 0.1}>
                 <Link to={cat.href} className="group relative rounded-2xl overflow-hidden block hover-lift">
                   <div className="aspect-[4/5] relative">
@@ -372,7 +375,7 @@ const Index = () => {
                     <h3 className="text-background font-display text-lg font-bold">{cat.name}</h3>
                     <p className="text-background/60 text-xs mt-0.5">{cat.desc}</p>
                     <span className="inline-flex items-center gap-1 text-background/80 text-xs font-medium mt-2 group-hover:text-primary transition-colors">
-                      {cat.count} <ChevronRight size={12} />
+                      {products.filter(p => p.categorySlug === cat.categorySlug).length} Products <ChevronRight size={12} />
                     </span>
                   </div>
                 </Link>

@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
 import { Star, Minus, Plus, ShoppingBag, Heart, Truck, Shield, RotateCcw, Lock, GraduationCap, Briefcase, Target, PenTool, Layers, BookHeart, Gem, Share2, Facebook, Twitter, MessageSquare, Loader2 } from "lucide-react";
@@ -39,7 +40,7 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
-  const [selectedVariants, setSelectedVariants] = useState({});
+  const [selectedVariant, setSelectedVariant] = useState(null);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [showStickyBar, setShowStickyBar] = useState(false);
 
@@ -81,7 +82,12 @@ const ProductDetail = () => {
   useEffect(() => {
     setSelectedImage(0);
     setQuantity(1);
-    setSelectedVariants({});
+    
+    if (product && Array.isArray(product.variants) && product.variants.length > 0) {
+      setSelectedVariant(product.variants[0]);
+    } else {
+      setSelectedVariant(null);
+    }
     
     if (location.hash === "#reviews") {
       setActiveTab("reviews");
@@ -112,7 +118,12 @@ const ProductDetail = () => {
   }
 
   const relatedProducts = products ? products.filter((p) => p.categorySlug === product.categorySlug && p.id !== product.id).slice(0, 4) : [];
-  const discount = product.originalPrice ? Math.round((product.originalPrice - product.price) / product.originalPrice * 100) : 0;
+  
+  const displayPrice = selectedVariant?.price ? Number(selectedVariant.price) : product.price;
+  const displayOriginalPrice = selectedVariant?.mrp ? Number(selectedVariant.mrp) : product.originalPrice;
+  const displayStock = selectedVariant?.stock ? Number(selectedVariant.stock) : product.stock;
+  
+  const discount = displayOriginalPrice ? Math.round((displayOriginalPrice - displayPrice) / displayOriginalPrice * 100) : 0;
   const wished = isWished(product.id);
 
   const tabs = [
@@ -121,7 +132,6 @@ const ProductDetail = () => {
     { id: "specifications", label: "Specifications" },
     { id: "reviews", label: `Reviews (${reviews.length})` }
   ];
-
 
   const perfectForIcons = {
     "Students": GraduationCap,
@@ -150,7 +160,7 @@ const ProductDetail = () => {
           {/* Images */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
             <div className="aspect-square rounded-2xl overflow-hidden bg-white">
-              <img src={product.images[selectedImage]} alt={product.name} className="w-full h-full object-contain transition-transform duration-500" />
+              <img src={getImageUrl(product.images[selectedImage])} alt={product.name} className="w-full h-full object-contain transition-transform duration-500" />
             </div>
             <div className="flex gap-3">
               {product.images.map((img, i) =>
@@ -159,7 +169,7 @@ const ProductDetail = () => {
                   onClick={() => setSelectedImage(i)}
                   className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-colors ${selectedImage === i ? "border-primary" : "border-border"}`}>
 
-                  <img src={img} alt="" className="w-full h-full object-contain bg-white" />
+                  <img src={getImageUrl(img)} alt="" className="w-full h-full object-contain bg-white" />
                 </button>
               )}
             </div>
@@ -175,13 +185,11 @@ const ProductDetail = () => {
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{product.brand}</p>
             <h1 className="font-display text-2xl lg:text-3xl font-bold text-foreground">{product.name}</h1>
 
-
-
             <div className="flex items-center gap-3 mt-4">
-              <span className="font-display text-3xl font-bold text-foreground">₹{product.price}</span>
-              {product.originalPrice &&
+              <span className="font-display text-3xl font-bold text-foreground">₹{displayPrice}</span>
+              {displayOriginalPrice > displayPrice &&
                 <>
-                  <span className="text-lg text-muted-foreground line-through">₹{product.originalPrice}</span>
+                  <span className="text-lg text-muted-foreground line-through">₹{displayOriginalPrice}</span>
                   <span className="text-sm font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full">Save {discount}%</span>
                 </>
               }
@@ -190,61 +198,46 @@ const ProductDetail = () => {
             <p className="text-sm text-muted-foreground mt-4 leading-relaxed">{product.shortDescription}</p>
 
             {/* Variants */}
-            {product.variants?.map((variant) => {
-              const isColorVariant = variant.label.toLowerCase().includes("colo");
-
-              return (
-                <div key={variant.label} className="mt-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-semibold">{variant.label}</h4>
-                    {selectedVariants[variant.label] && (
-                      <span className="text-xs text-muted-foreground">{selectedVariants[variant.label]}</span>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    {variant.options.map((opt) => {
-                      const hexColor = COLOR_MAP[opt];
-
-                      if (isColorVariant && hexColor) {
-                        return (
-                          <button
-                            key={opt}
-                            onClick={() => setSelectedVariants((prev) => ({ ...prev, [variant.label]: opt }))}
-                            className={`group relative flex items-center justify-center w-9 h-9 rounded-full border-2 transition-all ${selectedVariants[variant.label] === opt
-                              ? "border-primary scale-110 shadow-md"
-                              : "border-transparent hover:border-border"
-                              }`}
-                            title={opt}
-                          >
-                            <span
-                              className="w-7 h-7 rounded-full border border-black/5"
-                              style={{ backgroundColor: hexColor }}
-                            />
-                            {/* Tooltip for mobile or desktop hover */}
-                            <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                              {opt}
-                            </span>
-                          </button>
-                        );
-                      }
-
-                      return (
-                        <button
-                          key={opt}
-                          onClick={() => setSelectedVariants((prev) => ({ ...prev, [variant.label]: opt }))}
-                          className={`text-xs px-4 py-2 rounded-xl border font-medium transition-all ${selectedVariants[variant.label] === opt
+            {product.variants && product.variants.length > 0 && (
+              <div className="mt-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-semibold">Select Option</h4>
+                  {selectedVariant && (
+                    <span className="text-xs text-muted-foreground">
+                      {selectedVariant.title || `${selectedVariant.pages} Pages`}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {product.variants.map((variant) => {
+                    const isSelected = selectedVariant?.id === variant.id;
+                    const variantTitle = variant.title || `${variant.pages} Pages`;
+                    return (
+                      <button
+                        key={variant.id}
+                        onClick={() => setSelectedVariant(variant)}
+                        className={`text-xs px-4 py-2 rounded-xl border font-medium transition-all ${
+                          isSelected
                             ? "bg-primary text-primary-foreground border-primary shadow-sm"
                             : "border-border text-foreground hover:border-primary/50"
-                            }`}
-                        >
-                          {opt}
-                        </button>
-                      );
-                    })}
-                  </div>
+                        }`}
+                      >
+                        {variantTitle}
+                      </button>
+                    );
+                  })}
                 </div>
-              );
-            })}
+                
+                {selectedVariant && (
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-muted-foreground bg-slate-50 p-3 rounded-xl border border-border">
+                    {selectedVariant.pages && <div><span className="font-medium text-foreground">Pages:</span> {selectedVariant.pages}</div>}
+                    {selectedVariant.size && <div><span className="font-medium text-foreground">Size:</span> {selectedVariant.size}</div>}
+                    {selectedVariant.pack && <div><span className="font-medium text-foreground">Pack:</span> {selectedVariant.pack}</div>}
+                    {selectedVariant.sku && <div><span className="font-medium text-foreground">SKU:</span> {selectedVariant.sku}</div>}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Quantity & Actions */}
             <div className="mt-8 space-y-4">
@@ -269,7 +262,7 @@ const ProductDetail = () => {
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => addItem(product, quantity, selectedVariants)}
+                  onClick={() => addItem(product, quantity, selectedVariant)}
                   className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity">
 
                   <ShoppingBag size={18} /> Add to Cart
@@ -595,14 +588,14 @@ const ProductDetail = () => {
 
           <div className="container-custom flex items-center justify-between gap-4">
             <div className="hidden sm:flex items-center gap-3 min-w-0">
-              <img src={product.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
+              <img src={getImageUrl(product.images[0])} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground truncate">{product.name}</p>
-                <p className="text-sm font-bold text-primary">₹{product.price}</p>
+                <p className="text-sm font-bold text-primary">₹{displayPrice}</p>
               </div>
             </div>
             <button
-              onClick={() => addItem(product, quantity, selectedVariants)}
+              onClick={() => addItem(product, quantity, selectedVariant)}
               className="w-full sm:w-auto flex flex-1 sm:flex-none justify-center items-center gap-2 bg-primary text-primary-foreground px-6 py-3 sm:py-2.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity shrink-0">
 
               <ShoppingBag size={16} /> Add to Cart

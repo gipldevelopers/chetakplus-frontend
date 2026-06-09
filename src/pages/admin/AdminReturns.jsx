@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader, Panel, StatusBadge } from "@/components/admin/AdminUi";
 import api from "@/api";
@@ -201,7 +202,7 @@ const AdminReturns = () => {
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Item</p>
                 <div className="mt-2 flex gap-3">
-                  <img src={selectedRequest.item?.imageUrl || "/placeholder.svg"} alt={selectedRequest.item?.name || "Item"} className="h-14 w-14 rounded-lg border border-slate-200 object-cover" />
+                  <img src={getImageUrl(selectedRequest.item?.imageUrl || "/placeholder.svg")} alt={selectedRequest.item?.name || "Item"} className="h-14 w-14 rounded-lg border border-slate-200 object-cover" />
                   <div>
                     <p className="text-sm font-medium text-slate-800">{selectedRequest.item?.name}</p>
                     <p className="text-xs text-slate-500">Qty {selectedRequest.item?.quantity} • Rs {Number(selectedRequest.item?.price || 0).toLocaleString("en-IN")}</p>
@@ -233,7 +234,7 @@ const AdminReturns = () => {
                   <p className="mb-2 text-xs uppercase tracking-[0.14em] text-slate-400">Evidence</p>
                   <div className="grid grid-cols-3 gap-2">
                     {selectedRequest.evidenceImages.map((image) => (
-                      <img key={image} src={image} alt="Evidence" className="h-20 w-full rounded-lg border border-slate-200 object-cover" />
+                      <img key={image} src={getImageUrl(image)} alt="Evidence" className="h-20 w-full rounded-lg border border-slate-200 object-cover" />
                     ))}
                   </div>
                 </div>

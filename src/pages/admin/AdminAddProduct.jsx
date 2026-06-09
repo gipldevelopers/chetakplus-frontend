@@ -6,13 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader, Panel } from "@/components/admin/AdminUi";
-import { cn } from "@/lib/utils";
+import { cn, getImageUrl } from "@/lib/utils";
 import api from "@/api";
 
 const steps = [
   { key: "basic", title: "Basic Info" },
   { key: "media", title: "Media" },
   { key: "description", title: "Description" },
+  { key: "variants", title: "Variants" },
   { key: "inventory", title: "Inventory" },
   { key: "review", title: "Review & Publish" },
 ];
@@ -24,6 +25,7 @@ const initialFormData = {
   discount: "",
   images: [],
   description: "",
+  variants: [],
   stock: "",
   sku: "",
   status: "Active",
@@ -83,6 +85,7 @@ const AdminAddProduct = () => {
             discount: calculateDiscount(productData.price, productData.originalPrice),
             images: Array.isArray(productData.images) ? productData.images : [],
             description: productData.description || "",
+            variants: Array.isArray(productData.variants) ? productData.variants : [],
             stock: productData.stock ?? "",
             sku: productData.sku || "",
             status: productData.status || "Active",
@@ -155,6 +158,7 @@ const AdminAddProduct = () => {
         images: parsedImages,
         description: formData.description,
         shortDescription: formData.description ? formData.description.slice(0, 220) : "",
+        variants: formData.variants,
         stock: Number(formData.stock || 0),
         sku: formData.sku,
         status: formData.status,
@@ -323,7 +327,7 @@ const AdminAddProduct = () => {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {parsedImages.map((image, index) => (
                 <div key={`${image}-${index}`} className="group relative overflow-hidden rounded-xl border border-slate-200">
-                  <img src={image} alt="Product preview" className="h-28 w-full object-cover" />
+                  <img src={getImageUrl(image)} alt="Product preview" className="h-28 w-full object-cover" />
                   <button
                     type="button"
                     className="absolute right-1 top-1 inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition group-hover:opacity-100"
@@ -364,9 +368,171 @@ const AdminAddProduct = () => {
         ) : null}
 
         {stepIndex === 3 ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Product Variants</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-xl"
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    variants: [
+                      ...prev.variants,
+                      {
+                        id: Date.now().toString(),
+                        title: "",
+                        size: "",
+                        pages: "",
+                        pack: "",
+                        mrp: "",
+                        price: "",
+                        sku: "",
+                        stock: "10",
+                      },
+                    ],
+                  }));
+                }}
+              >
+                + Add Variant
+              </Button>
+            </div>
+            
+            {formData.variants.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
+                No variants added. The main product details will be used.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {formData.variants.map((variant, index) => (
+                  <div key={variant.id} className="relative rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <button
+                      type="button"
+                      className="absolute right-2 top-2 rounded-full p-1 text-slate-400 hover:bg-slate-200 hover:text-rose-500"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          variants: prev.variants.filter((v) => v.id !== variant.id),
+                        }));
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                    <div className="mb-3 font-medium text-slate-700">Variant {index + 1}</div>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Title (e.g. 72 Pages)</Label>
+                        <Input
+                          value={variant.title}
+                          onChange={(e) => {
+                            const newVariants = [...formData.variants];
+                            newVariants[index].title = e.target.value;
+                            setFormData((prev) => ({ ...prev, variants: newVariants }));
+                          }}
+                          className="h-8 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Pages</Label>
+                        <Input
+                          value={variant.pages}
+                          onChange={(e) => {
+                            const newVariants = [...formData.variants];
+                            newVariants[index].pages = e.target.value;
+                            setFormData((prev) => ({ ...prev, variants: newVariants }));
+                          }}
+                          className="h-8 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Size</Label>
+                        <Input
+                          value={variant.size}
+                          onChange={(e) => {
+                            const newVariants = [...formData.variants];
+                            newVariants[index].size = e.target.value;
+                            setFormData((prev) => ({ ...prev, variants: newVariants }));
+                          }}
+                          className="h-8 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Pack</Label>
+                        <Input
+                          value={variant.pack}
+                          onChange={(e) => {
+                            const newVariants = [...formData.variants];
+                            newVariants[index].pack = e.target.value;
+                            setFormData((prev) => ({ ...prev, variants: newVariants }));
+                          }}
+                          className="h-8 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">MRP (₹)</Label>
+                        <Input
+                          type="number"
+                          value={variant.mrp}
+                          onChange={(e) => {
+                            const newVariants = [...formData.variants];
+                            newVariants[index].mrp = e.target.value;
+                            setFormData((prev) => ({ ...prev, variants: newVariants }));
+                          }}
+                          className="h-8 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Selling Price (₹)</Label>
+                        <Input
+                          type="number"
+                          value={variant.price}
+                          onChange={(e) => {
+                            const newVariants = [...formData.variants];
+                            newVariants[index].price = e.target.value;
+                            setFormData((prev) => ({ ...prev, variants: newVariants }));
+                          }}
+                          className="h-8 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">SKU</Label>
+                        <Input
+                          value={variant.sku}
+                          onChange={(e) => {
+                            const newVariants = [...formData.variants];
+                            newVariants[index].sku = e.target.value;
+                            setFormData((prev) => ({ ...prev, variants: newVariants }));
+                          }}
+                          className="h-8 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Stock</Label>
+                        <Input
+                          type="number"
+                          value={variant.stock}
+                          onChange={(e) => {
+                            const newVariants = [...formData.variants];
+                            newVariants[index].stock = e.target.value;
+                            setFormData((prev) => ({ ...prev, variants: newVariants }));
+                          }}
+                          className="h-8 rounded-lg text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {stepIndex === 4 ? (
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="product-stock">Stock</Label>
+              <Label htmlFor="product-stock">Base Stock</Label>
               <Input
                 id="product-stock"
                 type="number"
@@ -377,7 +543,7 @@ const AdminAddProduct = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="product-sku">SKU</Label>
+              <Label htmlFor="product-sku">Base SKU</Label>
               <Input
                 id="product-sku"
                 value={formData.sku}
@@ -402,7 +568,7 @@ const AdminAddProduct = () => {
           </div>
         ) : null}
 
-        {stepIndex === 4 ? (
+        {stepIndex === 5 ? (
           <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">

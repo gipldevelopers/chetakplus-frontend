@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Upload, X } from "lucide-react";
@@ -357,7 +358,7 @@ const AdminCategoryForm = () => {
             </div>
 
             <div className="overflow-hidden rounded-2xl border border-slate-200">
-              {formData.imageUrl ? <img src={formData.imageUrl} alt="Category preview" className="h-52 w-full object-cover" /> : <div className="h-52 bg-slate-100" />}
+              {formData.imageUrl ? <img src={getImageUrl(formData.imageUrl)} alt="Category preview" className="h-52 w-full object-cover" /> : <div className="h-52 bg-slate-100" />}
               <div className="space-y-2 p-4">
                 <h3 className="text-lg font-semibold text-slate-900">{formData.name || "Category Name"}</h3>
                 <p className="text-sm text-slate-500">/{formData.slug || "category-slug"}</p>

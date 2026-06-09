@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, Gift, ArrowRight } from "lucide-react";
@@ -86,7 +87,7 @@ const OfferPopup = () => {
             {/* Left Image Section */}
             <div className="md:w-1/2 relative h-48 md:h-auto">
               <img
-                src={offerImage}
+                src={getImageUrl(offerImage)}
                 alt="Special Offer"
                 className="w-full h-full object-cover"
               />

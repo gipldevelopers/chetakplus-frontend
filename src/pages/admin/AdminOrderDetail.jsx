@@ -173,6 +173,9 @@ const AdminOrderDetail = () => {
                 <div key={`${item.name}-${item.price}`} className="flex items-center justify-between px-4 py-3 text-sm">
                   <div>
                     <p className="font-medium text-slate-800">{item.name}</p>
+                    {item.selectedVariants && item.selectedVariants.title && (
+                      <p className="text-xs text-slate-500 mb-0.5">{item.selectedVariants.title}</p>
+                    )}
                     <p className="text-xs text-slate-500">Qty {item.quantity}</p>
                   </div>
                   <p className="font-semibold text-slate-800">{formatCurrency(item.price * item.quantity)}</p>

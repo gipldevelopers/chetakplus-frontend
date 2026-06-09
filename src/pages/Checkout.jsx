@@ -1,8 +1,9 @@
+import { getImageUrl } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { Lock, Shield, CreditCard, ChevronLeft } from "lucide-react";
+import { Lock, Shield, CreditCard, ChevronLeft, MapPin, Plus } from "lucide-react";
 import { toast } from "sonner";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import api from "@/api";
@@ -192,7 +193,11 @@ const Checkout = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (["address", "city", "state", "pincode", "firstName", "lastName", "phone"].includes(name)) {
-      setSelectedAddressId("");
+      if (savedAddresses.length > 0) {
+        setSelectedAddressId("new");
+      } else {
+        setSelectedAddressId("");
+      }
     }
   };
 
@@ -268,7 +273,7 @@ const Checkout = () => {
           ...formData,
           customerId: user.id || null,
           email: user.email || formData.email,
-          addressId: selectedAddress?.id || selectedAddressId || null,
+          addressId: selectedAddress?.id || (selectedAddressId !== "new" ? selectedAddressId : null) || null,
           fullName: `${formData.firstName} ${formData.lastName}`.trim(),
         },
         items: items.map((item) => ({
@@ -277,8 +282,17 @@ const Checkout = () => {
           slug: item.product.slug,
           imageUrl: item.product.images?.[0] || "",
           quantity: item.quantity,
-          price: Number(item.product.price || 0),
-          selectedVariants: item.selectedVariants || {},
+          price: Number(item.selectedVariant?.price || item.product.price || 0),
+          selectedVariants: item.selectedVariant ? {
+            id: item.selectedVariant.id,
+            title: item.selectedVariant.title || `${item.selectedVariant.pages} Pages`,
+            pages: item.selectedVariant.pages,
+            size: item.selectedVariant.size,
+            pack: item.selectedVariant.pack,
+            mrp: item.selectedVariant.mrp,
+            price: item.selectedVariant.price,
+            sku: item.selectedVariant.sku,
+          } : {},
         })),
         pricing: {
           subtotal: Number(totalPrice || 0),
@@ -355,7 +369,9 @@ const Checkout = () => {
               <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm">
                 {savedAddresses.length > 0 ? (
                   <>
-                    <h2 className="font-display text-2xl font-bold text-foreground mb-4">Saved Addresses</h2>
+                    <h2 className="font-display text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
+                      <MapPin className="text-primary" size={24} /> Saved Addresses
+                    </h2>
                     <div className="space-y-3 mb-8">
                       {savedAddresses.map((entry) => (
                         <button
@@ -374,6 +390,22 @@ const Checkout = () => {
                           <p className="text-sm text-foreground/80 mt-1">{entry.fullAddress}</p>
                         </button>
                       ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedAddressId("new");
+                          setFormData(prev => ({ ...prev, address: "", city: "", state: "", pincode: "" }));
+                        }}
+                        className={`w-full text-left rounded-xl border px-4 py-3 transition-all ${
+                          selectedAddressId === "new"
+                            ? "border-primary bg-primary/5"
+                            : "border-border bg-background hover:bg-secondary/40"
+                        }`}
+                      >
+                        <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                           <Plus size={18} /> Add a new address
+                        </p>
+                      </button>
                     </div>
                   </>
                 ) : null}
@@ -443,82 +475,86 @@ const Checkout = () => {
                   ) : null}
                 </div>
 
-                <h2 className="font-display text-2xl font-bold text-foreground mt-10 mb-6">Shipping Address</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1.5">First Name</label>
-                    <input
-                      type="text"
-                      name="firstName"
-                      required
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1.5">Last Name</label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      required
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-foreground mb-1.5">Address</label>
-                    <input
-                      type="text"
-                      name="address"
-                      required
-                      value={formData.address}
-                      onChange={handleChange}
-                      list="checkout-address-suggestions"
-                      placeholder="Apartment, suite, etc."
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
-                    />
-                    <datalist id="checkout-address-suggestions">
-                      {addressSuggestions.map((address) => (
-                        <option key={address} value={address} />
-                      ))}
-                    </datalist>
-                  </div>
-                  <div className="col-span-2 sm:col-span-1">
-                    <label className="block text-sm font-medium text-foreground mb-1.5">City</label>
-                    <input
-                      type="text"
-                      name="city"
-                      required
-                      value={formData.city}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1.5">State</label>
-                    <input
-                      type="text"
-                      name="state"
-                      required
-                      value={formData.state}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1.5">PIN Code</label>
-                    <input
-                      type="text"
-                      name="pincode"
-                      required
-                      value={formData.pincode}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
-                    />
-                  </div>
-                </div>
+                { (savedAddresses.length === 0 || selectedAddressId === "new") && (
+                  <>
+                    <h2 className="font-display text-2xl font-bold text-foreground mt-10 mb-6">Shipping Address</h2>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-1.5">First Name</label>
+                        <input
+                          type="text"
+                          name="firstName"
+                          required
+                          value={formData.firstName}
+                          onChange={handleChange}
+                          className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-1.5">Last Name</label>
+                        <input
+                          type="text"
+                          name="lastName"
+                          required
+                          value={formData.lastName}
+                          onChange={handleChange}
+                          className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block text-sm font-medium text-foreground mb-1.5">Address</label>
+                        <input
+                          type="text"
+                          name="address"
+                          required
+                          value={formData.address}
+                          onChange={handleChange}
+                          list="checkout-address-suggestions"
+                          placeholder="Apartment, suite, etc."
+                          className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
+                        />
+                        <datalist id="checkout-address-suggestions">
+                          {addressSuggestions.map((address) => (
+                            <option key={address} value={address} />
+                          ))}
+                        </datalist>
+                      </div>
+                      <div className="col-span-2 sm:col-span-1">
+                        <label className="block text-sm font-medium text-foreground mb-1.5">City</label>
+                        <input
+                          type="text"
+                          name="city"
+                          required
+                          value={formData.city}
+                          onChange={handleChange}
+                          className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-1.5">State</label>
+                        <input
+                          type="text"
+                          name="state"
+                          required
+                          value={formData.state}
+                          onChange={handleChange}
+                          className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-1.5">PIN Code</label>
+                        <input
+                          type="text"
+                          name="pincode"
+                          required
+                          value={formData.pincode}
+                          onChange={handleChange}
+                          className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <h2 className="font-display text-2xl font-bold text-foreground mt-10 mb-6">Payment</h2>
                 <div className="space-y-3">
@@ -562,7 +598,7 @@ const Checkout = () => {
                         </p>
                         {(checkoutSettings.upiQrImageUrl || checkoutSettings.upiId) ? (
                           <img
-                            src={checkoutSettings.upiQrImageUrl || generateUpiQrUrl(checkoutSettings.upiId)}
+                            src={getImageUrl(checkoutSettings.upiQrImageUrl || generateUpiQrUrl(checkoutSettings.upiId))}
                             alt="UPI QR"
                             className="mt-3 w-28 h-28 rounded-lg border border-border bg-background"
                           />
@@ -595,25 +631,29 @@ const Checkout = () => {
                 <h3 className="font-display text-xl font-bold text-foreground mb-6">Order Summary</h3>
                 
                 <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 scrollbar-hide">
-                  {items.map((item) => (
-                    <div key={item.product.id} className="flex gap-4 border-b border-border/50 pb-4 last:border-0 last:pb-0">
+                  {items.map((item) => {
+                    const price = item.selectedVariant?.price ? Number(item.selectedVariant.price) : Number(item.product.price);
+                    const variantTitle = item.selectedVariant?.title || (item.selectedVariant?.pages ? `${item.selectedVariant.pages} Pages` : "");
+                    
+                    return (
+                    <div key={item.cartItemId} className="flex gap-4 border-b border-border/50 pb-4 last:border-0 last:pb-0">
                       <div className="relative">
-                        <img src={item.product.images[0]} alt={item.product.name} className="w-16 h-16 object-cover rounded-lg border border-border" />
+                        <img src={getImageUrl(item.product.images[0])} alt={item.product.name} className="w-16 h-16 object-cover rounded-lg border border-border" />
                         <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
                           {item.quantity}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="text-sm font-medium text-foreground leading-snug line-clamp-2 pr-4">{item.product.name}</h4>
-                        {item.selectedVariants && Object.values(item.selectedVariants).map(v => (
-                           <span key={v} className="text-xs text-muted-foreground block mt-0.5">{v}</span>
-                        ))}
+                        {variantTitle && (
+                           <span className="text-xs text-muted-foreground block mt-0.5">{variantTitle}</span>
+                        )}
                       </div>
                       <div className="text-sm font-semibold whitespace-nowrap">
-                        ₹{item.product.price * item.quantity}
+                        ₹{price * item.quantity}
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
 
                 <div className="border-t border-border mt-6 pt-6 space-y-3">

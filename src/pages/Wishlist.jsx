@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { Heart, ArrowRight } from "lucide-react";
 import { useWishlist } from "@/context/WishlistContext";
@@ -28,7 +29,7 @@ const Wishlist = () => {
           <ScrollReveal key={product.id} delay={i * 0.05}>
                 <div className="bg-card border border-border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-4">
                   <div className="w-20 h-20 rounded-xl overflow-hidden border border-border bg-secondary/30 shrink-0">
-                    {product.images?.[0] ? <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" /> : null}
+                    {product.images?.[0] ? <img src={getImageUrl(product.images[0])} alt={product.name} className="w-full h-full object-cover" /> : null}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground line-clamp-1">{product.name}</p>

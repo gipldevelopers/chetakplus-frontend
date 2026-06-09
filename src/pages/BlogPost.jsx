@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { ArrowLeft, ArrowRight, Calendar, Clock3 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import ScrollReveal from "@/components/ui/ScrollReveal";
@@ -60,7 +61,7 @@ const BlogPost = () => {
                 <div className="overflow-hidden rounded-[2rem] border border-border/50 bg-card shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
                   <div className="aspect-[4/5] overflow-hidden">
                     <img
-                      src={post.image}
+                      src={getImageUrl(post.image)}
                       alt={post.title}
                       className="h-full w-full object-cover"
                     />
@@ -79,7 +80,7 @@ const BlogPost = () => {
               <div className="overflow-hidden rounded-3xl border border-border/50 bg-card shadow-sm lg:hidden">
                 <div className="aspect-[16/10] overflow-hidden">
                   <img
-                    src={post.image}
+                    src={getImageUrl(post.image)}
                     alt={post.title}
                     className="h-full w-full object-cover"
                   />

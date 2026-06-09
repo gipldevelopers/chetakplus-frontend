@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import {
@@ -159,7 +160,7 @@ const About = () => {
               <div className="relative mx-auto w-full max-w-[460px]">
                 <div className="overflow-hidden rounded-[2rem] border border-border/50 bg-card shadow-[0_24px_70px_rgba(0,0,0,0.09)]">
                   <img
-                    src={heroBanner}
+                    src={getImageUrl(heroBanner)}
                     alt="ChetakPlus stationery collection"
                     className="h-full w-full object-cover"
                   />
@@ -301,7 +302,7 @@ const About = () => {
             <ScrollReveal>
               <div className="overflow-hidden rounded-[2rem] border border-border/50 bg-card shadow-sm">
                 <img
-                  src={plannerCustomizationImage}
+                  src={getImageUrl(plannerCustomizationImage)}
                   alt="Premium stationery details"
                   className="h-full w-full object-cover"
                 />
@@ -377,7 +378,7 @@ const About = () => {
                 >
                   <div className="aspect-[4/3] overflow-hidden">
                     <img
-                      src={category.image}
+                      src={getImageUrl(category.image)}
                       alt={category.title}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />

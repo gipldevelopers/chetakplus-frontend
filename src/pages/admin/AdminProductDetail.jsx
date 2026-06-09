@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Pencil } from "lucide-react";
@@ -94,7 +95,7 @@ const AdminProductDetail = () => {
         <Panel className="space-y-4 p-5 sm:p-6">
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
             {activeImage ? (
-              <img src={activeImage} alt={product.name} className="h-[340px] w-full object-cover" />
+              <img src={getImageUrl(activeImage)} alt={product.name} className="h-[340px] w-full object-cover" />
             ) : (
               <div className="flex h-[340px] items-center justify-center text-sm text-slate-400">No image</div>
             )}
@@ -108,7 +109,7 @@ const AdminProductDetail = () => {
                 onClick={() => setActiveImage(image)}
                 className={`overflow-hidden rounded-lg border ${activeImage === image ? "border-slate-900" : "border-slate-200"}`}
               >
-                <img src={image} alt={product.name} className="h-20 w-full object-cover" />
+                <img src={getImageUrl(image)} alt={product.name} className="h-20 w-full object-cover" />
               </button>
             ))}
           </div>

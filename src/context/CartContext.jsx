@@ -18,29 +18,30 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem("cart", JSON.stringify(items));
   }, [items]);
 
-  const addItem = useCallback((product, quantity = 1, variants) => {
+  const addItem = useCallback((product, quantity = 1, variant = null) => {
     setItems((prev) => {
-      const existing = prev.find((i) => i.product.id === product.id);
+      const cartItemId = variant ? `${product.id}-${variant.id}` : product.id;
+      const existing = prev.find((i) => i.cartItemId === cartItemId);
       if (existing) {
         return prev.map((i) =>
-        i.product.id === product.id ? { ...i, quantity: i.quantity + quantity } : i
+        i.cartItemId === cartItemId ? { ...i, quantity: i.quantity + quantity } : i
         );
       }
-      return [...prev, { product, quantity, selectedVariants: variants }];
+      return [...prev, { cartItemId, product, quantity, selectedVariant: variant }];
     });
     setIsCartOpen(true);
   }, []);
 
-  const removeItem = useCallback((productId) => {
-    setItems((prev) => prev.filter((i) => i.product.id !== productId));
+  const removeItem = useCallback((cartItemId) => {
+    setItems((prev) => prev.filter((i) => i.cartItemId !== cartItemId));
   }, []);
 
-  const updateQuantity = useCallback((productId, quantity) => {
+  const updateQuantity = useCallback((cartItemId, quantity) => {
     if (quantity <= 0) {
-      setItems((prev) => prev.filter((i) => i.product.id !== productId));
+      setItems((prev) => prev.filter((i) => i.cartItemId !== cartItemId));
     } else {
       setItems((prev) =>
-      prev.map((i) => i.product.id === productId ? { ...i, quantity } : i)
+      prev.map((i) => i.cartItemId === cartItemId ? { ...i, quantity } : i)
       );
     }
   }, []);
@@ -48,7 +49,10 @@ export const CartProvider = ({ children }) => {
   const clearCart = useCallback(() => setItems([]), []);
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
-  const totalPrice = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+  const totalPrice = items.reduce((sum, i) => {
+    const price = i.selectedVariant?.price ? Number(i.selectedVariant.price) : Number(i.product.price);
+    return sum + price * i.quantity;
+  }, 0);
 
   return (
     <CartContext.Provider

@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 
 
 import { ArrowRight, Calendar } from "lucide-react";
@@ -27,7 +28,7 @@ const Blog = () => {
             <ScrollReveal key={post.slug} delay={i * 0.1}>
                 <article className="bg-card rounded-2xl overflow-hidden border border-border/50 hover-lift group">
                   <div className="aspect-[16/10] overflow-hidden">
-                    <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={getImageUrl(post.image)} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <div className="p-6">
                     <div className="flex items-center gap-3 mb-3">

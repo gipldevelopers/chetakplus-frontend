@@ -5,10 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
 import { motion } from "framer-motion";
-
-
-
-
+import { getImageUrl } from "@/lib/utils";
 
 const ProductCard = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -29,7 +26,7 @@ const ProductCard = ({ product }) => {
 
       <Link to={`/product/${product.slug}`} className="block relative aspect-square overflow-hidden bg-white group">
         <img
-          src={isHovered && product.images[1] ? product.images[1] : product.images[0]}
+          src={getImageUrl(isHovered && product.images[1] ? product.images[1] : product.images[0])}
           alt={product.name}
           className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
           loading="lazy" />

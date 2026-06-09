@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Edit, Plus, Trash2 } from "lucide-react";
@@ -98,7 +99,7 @@ const AdminHeroList = () => {
                 {hero.mediaType === "video" ? (
                   <video src={hero.imageUrl} poster={hero.posterUrl || undefined} muted autoPlay loop playsInline className="h-full w-full object-cover" />
                 ) : (
-                  <img src={hero.imageUrl} alt={hero.title} className="h-full w-full object-cover transition duration-500 hover:scale-105" />
+                  <img src={getImageUrl(hero.imageUrl)} alt={hero.title} className="h-full w-full object-cover transition duration-500 hover:scale-105" />
                 )}
                 <div className="absolute left-3 top-3">
                   <StatusBadge value={hero.status} />

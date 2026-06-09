@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Loader2, UploadCloud } from "lucide-react";
@@ -558,7 +559,7 @@ const AdminHeroForm = () => {
                 playsInline
               />
             ) : formData.imageUrl ? (
-              <img src={formData.imageUrl} alt="Hero preview" className="h-64 w-full object-cover" />
+              <img src={getImageUrl(formData.imageUrl)} alt="Hero preview" className="h-64 w-full object-cover" />
             ) : (
               <div className="h-64 bg-slate-100" />
             )}
