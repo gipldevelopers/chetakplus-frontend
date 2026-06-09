@@ -572,7 +572,7 @@ const Index = () => {
           <div className="container-custom">
             <div className="grid lg:grid-cols-2 gap-10 items-center">
               <ScrollReveal>
-                <img src={featured.images[0]} alt={featured.name} className="w-full rounded-2xl shadow-lg" />
+                <img src={getImageUrl(featured.images[0])} alt={featured.name} className="w-full rounded-2xl shadow-lg" />
               </ScrollReveal>
               <ScrollReveal delay={0.2}>
                 <span className="text-xs font-bold uppercase tracking-wider text-primary">Planner of the Month</span>
