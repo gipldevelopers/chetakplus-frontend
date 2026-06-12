@@ -137,7 +137,7 @@ const Shop = () => {
                   type="number"
                   value={priceRange[0]}
                   onChange={(e) => setPriceRange([+e.target.value, priceRange[1]])}
-                  className="w-20 px-3 py-2 text-sm border border-border rounded-lg bg-background"
+                  className="w-24 px-3 py-2 text-sm border border-border rounded-lg bg-background"
                   placeholder="Min" />
 
                 <span className="text-muted-foreground">–</span>
@@ -145,7 +145,7 @@ const Shop = () => {
                   type="number"
                   value={priceRange[1]}
                   onChange={(e) => setPriceRange([priceRange[0], +e.target.value])}
-                  className="w-20 px-3 py-2 text-sm border border-border rounded-lg bg-background"
+                  className="w-24 px-3 py-2 text-sm border border-border rounded-lg bg-background"
                   placeholder="Max" />
 
               </div>

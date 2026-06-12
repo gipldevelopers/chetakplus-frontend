@@ -78,12 +78,12 @@ const Navbar = () => {
           </button>
 
           {/* Logo */}
-          <Link to="/" className="flex items-center">
+          <Link to="/" className="flex items-center shrink-0 mr-4">
             <img src="/logo.jpg" alt="ChetakPlus" className="h-10 lg:h-12 w-auto object-contain" />
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden lg:flex items-center gap-5 xl:gap-7">
+          <div className="hidden lg:flex flex-1 justify-center items-center gap-3 xl:gap-6 mx-2">
             {navLinks.map((link) => (
               <div
                 key={link.name}
@@ -105,7 +105,7 @@ const Navbar = () => {
           </div>
 
           {/* Right icons */}
-          <div className="flex items-center gap-1 sm:gap-3">
+          <div className="flex items-center justify-end gap-1 sm:gap-3 shrink-0 ml-4">
             <button onClick={() => setSearchOpen(true)} className="p-2 text-foreground/70 hover:text-foreground transition-colors" aria-label="Search">
               <Search size={20} />
             </button>
@@ -128,7 +128,7 @@ const Navbar = () => {
                       <span className="text-xs font-bold">{userInitial}</span>
                     )}
                   </div>
-                  <span className="hidden sm:block text-[13px] font-bold text-foreground truncate max-w-[80px]">
+                  <span className="hidden xl:block text-[13px] font-bold text-foreground truncate max-w-[80px]">
                     {userFirstName}
                   </span>
                 </Link>
@@ -136,10 +136,10 @@ const Navbar = () => {
                 {/* Simple Hover Dropdown */}
                 <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                   <div className="bg-card border border-border rounded-xl shadow-xl p-2 min-w-[160px]">
-                    <Link to="/profile" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary text-[13px] font-medium text-foreground transition-colors">
+                    <Link to="/profile?tab=profile" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary text-[13px] font-medium text-foreground transition-colors">
                       <User size={14} /> My Profile
                     </Link>
-                    <Link to="/profile" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary text-[13px] font-medium text-foreground transition-colors">
+                    <Link to="/profile?tab=orders" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary text-[13px] font-medium text-foreground transition-colors">
                       <ShoppingBag size={14} /> My Orders
                     </Link>
                     <button

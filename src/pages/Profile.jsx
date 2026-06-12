@@ -40,7 +40,7 @@ const Profile = () => {
   const { products } = useData();
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = searchParams.get("tab") || "orders";
+  const tab = searchParams.get("tab") || "profile";
   const setTab = (newTab) => {
     setSearchParams({ tab: newTab }, { replace: true });
   };
@@ -827,7 +827,7 @@ const Profile = () => {
                 }} className="space-y-3 max-w-lg">
                   <input value={profileData.name} onChange={(e) => setProfileData((p) => ({ ...p, name: e.target.value }))} className="h-10 w-full rounded-lg border border-border px-3" placeholder="Name" />
                   <input value={profileData.email} disabled className="h-10 w-full rounded-lg border border-border px-3 bg-secondary/40" />
-                  <input value={profileData.phone} onChange={(e) => setProfileData((p) => ({ ...p, phone: e.target.value }))} className="h-10 w-full rounded-lg border border-border px-3" placeholder="Phone" />
+                  <input type="tel" maxLength="10" pattern="[0-9]{10}" title="Please enter exactly 10 digits" value={profileData.phone} onChange={(e) => setProfileData((p) => ({ ...p, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))} className="h-10 w-full rounded-lg border border-border px-3" placeholder="Phone (10 digits)" />
                   <textarea value={profileData.address} onChange={(e) => setProfileData((p) => ({ ...p, address: e.target.value }))} className="w-full rounded-lg border border-border px-3 py-2" rows="3" placeholder="Default address" />
                   <button disabled={updatingProfile} className="px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold">{updatingProfile ? "Saving..." : "Save Changes"}</button>
                 </form>
@@ -1060,7 +1060,7 @@ const Profile = () => {
                       </select>
                       <input value={addressForm.label} onChange={(e) => setAddressForm((p) => ({ ...p, label: e.target.value }))} className="h-10 w-full rounded-lg border border-border px-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Label (e.g. My Place)" />
                       <input value={addressForm.fullName} onChange={(e) => setAddressForm((p) => ({ ...p, fullName: e.target.value }))} className="h-10 w-full rounded-lg border border-border px-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Full Name" required />
-                      <input value={addressForm.phone} onChange={(e) => setAddressForm((p) => ({ ...p, phone: e.target.value }))} className="h-10 w-full rounded-lg border border-border px-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Phone" required />
+                      <input type="tel" maxLength="10" pattern="[0-9]{10}" title="Please enter exactly 10 digits" value={addressForm.phone} onChange={(e) => setAddressForm((p) => ({ ...p, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))} className="h-10 w-full rounded-lg border border-border px-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Phone (10 digits)" required />
                       <input value={addressForm.addressLine} onChange={(e) => setAddressForm((p) => ({ ...p, addressLine: e.target.value }))} className="h-10 w-full rounded-lg border border-border px-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Address line" required />
                       <div className="grid grid-cols-2 gap-2">
                         <input value={addressForm.city} onChange={(e) => setAddressForm((p) => ({ ...p, city: e.target.value }))} className="h-10 w-full rounded-lg border border-border px-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="City" required />
