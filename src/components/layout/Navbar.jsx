@@ -78,12 +78,14 @@ const Navbar = () => {
           </button>
 
           {/* Logo */}
-          <Link to="/" className="flex items-center shrink-0 mr-4">
-            <img src="/logo.jpg" alt="ChetakPlus" className="h-10 lg:h-12 w-auto object-contain" />
-          </Link>
+          <div className="flex flex-1 items-center justify-start">
+            <Link to="/" className="flex items-center shrink-0 mr-4">
+              <img src="/logo.jpg" alt="ChetakPlus" className="h-10 lg:h-12 w-auto object-contain" />
+            </Link>
+          </div>
 
           {/* Desktop nav */}
-          <div className="hidden lg:flex flex-1 justify-center items-center gap-3 xl:gap-6 mx-2">
+          <div className="hidden lg:flex shrink-0 justify-center items-center gap-3 xl:gap-6 mx-2">
             {navLinks.map((link) => (
               <div
                 key={link.name}
@@ -105,7 +107,7 @@ const Navbar = () => {
           </div>
 
           {/* Right icons */}
-          <div className="flex items-center justify-end gap-1 sm:gap-3 shrink-0 ml-4">
+          <div className="flex flex-1 items-center justify-end gap-1 sm:gap-3 shrink-0 ml-4">
             <button onClick={() => setSearchOpen(true)} className="p-2 text-foreground/70 hover:text-foreground transition-colors" aria-label="Search">
               <Search size={20} />
             </button>
