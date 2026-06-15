@@ -112,7 +112,7 @@ const Navbar = () => {
             {user ? (
               <div className="relative group">
                 <Link to="/profile" className="flex items-center gap-2 p-1.5 pr-3 rounded-full hover:bg-secondary transition-all">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 overflow-hidden">
+                  <div className="w-8 h-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 overflow-hidden">
                     {profilePhoto ? (
                       <img
                         src={getImageUrl(profilePhoto)}
